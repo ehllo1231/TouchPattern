@@ -1,0 +1,246 @@
+{
+  "format_version": 1,
+  "title": "First Echo",
+  "artist": "TouchPattern · Original Demo",
+  "bpm": 112,
+  "offset_seconds": 0.0,
+  "audio": "../audio/first_echo.wav",
+  "grid": {
+    "rows": 2,
+    "columns": 2
+  },
+  "phrases": [
+    {
+      "name": "첫 인사",
+      "show_beat": 4,
+      "response_beat": 8,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 1,
+          "cell": 1
+        },
+        {
+          "beat": 2,
+          "cell": 2
+        },
+        {
+          "beat": 3,
+          "cell": 3
+        }
+      ]
+    },
+    {
+      "name": "쉼표 한 칸",
+      "show_beat": 12,
+      "response_beat": 16,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 1,
+          "cell": 3
+        },
+        {
+          "beat": 3,
+          "cell": 1
+        }
+      ]
+    },
+    {
+      "name": "반 박자",
+      "show_beat": 20,
+      "response_beat": 24,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 0.5,
+          "cell": 1
+        },
+        {
+          "beat": 1.5,
+          "cell": 2
+        },
+        {
+          "beat": 2,
+          "cell": 3
+        },
+        {
+          "beat": 3,
+          "cell": 0
+        }
+      ]
+    },
+    {
+      "name": "함께 치기",
+      "show_beat": 28,
+      "response_beat": 32,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 0,
+          "cell": 3
+        },
+        {
+          "beat": 1,
+          "cell": 1
+        },
+        {
+          "beat": 2,
+          "cell": 1
+        },
+        {
+          "beat": 2,
+          "cell": 2
+        },
+        {
+          "beat": 3,
+          "cell": 3
+        }
+      ]
+    },
+    {
+      "name": "엇박자",
+      "show_beat": 36,
+      "response_beat": 40,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 2
+        },
+        {
+          "beat": 0.75,
+          "cell": 0
+        },
+        {
+          "beat": 1.5,
+          "cell": 3
+        },
+        {
+          "beat": 2.5,
+          "cell": 1
+        },
+        {
+          "beat": 3,
+          "cell": 2
+        }
+      ]
+    },
+    {
+      "name": "빈자리 기억",
+      "show_beat": 44,
+      "response_beat": 48,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 1
+        },
+        {
+          "beat": 0.5,
+          "cell": 3
+        },
+        {
+          "beat": 2,
+          "cell": 0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2
+        },
+        {
+          "beat": 3.5,
+          "cell": 1
+        }
+      ]
+    },
+    {
+      "name": "두 손의 대화",
+      "show_beat": 52,
+      "response_beat": 56,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 0,
+          "cell": 1
+        },
+        {
+          "beat": 1,
+          "cell": 2
+        },
+        {
+          "beat": 1.5,
+          "cell": 3
+        },
+        {
+          "beat": 2.5,
+          "cell": 0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3
+        },
+        {
+          "beat": 3.5,
+          "cell": 2
+        }
+      ]
+    },
+    {
+      "name": "마지막 메아리",
+      "show_beat": 60,
+      "response_beat": 64,
+      "length_beats": 4,
+      "notes": [
+        {
+          "beat": 0,
+          "cell": 0
+        },
+        {
+          "beat": 0.5,
+          "cell": 2
+        },
+        {
+          "beat": 1,
+          "cell": 1
+        },
+        {
+          "beat": 1.75,
+          "cell": 3
+        },
+        {
+          "beat": 2.5,
+          "cell": 0
+        },
+        {
+          "beat": 3,
+          "cell": 1
+        },
+        {
+          "beat": 3,
+          "cell": 2
+        }
+      ]
+    }
+  ]
+}

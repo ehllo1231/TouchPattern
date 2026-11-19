@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NoteSoundConfig" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/note_sound_config.gd" id="1"]
+[ext_resource type="AudioStream" path="res://assets/audio/clap.wav" id="2"]
+
+[resource]
+script = ExtResource("1")
+sound = ExtResource("2")
+volume_db = -12.0
+enabled_by_default = true
+demo_enabled = true
+input_enabled = true
+preview_enabled = true
+combine_simultaneous = true
+polyphony = 8

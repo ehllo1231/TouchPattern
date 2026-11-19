@@ -1,0 +1,1502 @@
+{
+  "artist": "",
+  "audio": "../audio/the_descent_loop.mp3",
+  "bpm": 116.74,
+  "format_version": 1.0,
+  "grid": {
+    "columns": 2.0,
+    "rows": 2.0
+  },
+  "offset_seconds": 0.0499999999999545,
+  "phrases": [
+    {
+      "length_beats": 4.0,
+      "name": "첫 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 8.0,
+      "show_beat": 4.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 16.0,
+      "show_beat": 12.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 24.0,
+      "show_beat": 20.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 32.0,
+      "show_beat": 28.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 40.0,
+      "show_beat": 36.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 48.0,
+      "show_beat": 44.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 56.0,
+      "show_beat": 52.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 64.0,
+      "show_beat": 60.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 72.0,
+      "show_beat": 68.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 80.0,
+      "show_beat": 76.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 88.0,
+      "show_beat": 84.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 96.0,
+      "show_beat": 92.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 104.0,
+      "show_beat": 100.0
+    },
+    {
+      "length_beats": 4.0,
+      "name": "새 패턴",
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 112.0,
+      "show_beat": 108.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 120.0,
+      "show_beat": 116.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 128.0,
+      "show_beat": 124.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 136.0,
+      "show_beat": 132.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 144.0,
+      "show_beat": 140.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 152.0,
+      "show_beat": 148.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 160.0,
+      "show_beat": 156.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 168.0,
+      "show_beat": 164.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 176.0,
+      "show_beat": 172.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 184.0,
+      "show_beat": 180.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 192.0,
+      "show_beat": 188.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 200.0,
+      "show_beat": 196.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 208.0,
+      "show_beat": 204.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 216.0,
+      "show_beat": 212.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 224.0,
+      "show_beat": 220.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 232.0,
+      "show_beat": 228.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 240.0,
+      "show_beat": 236.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 248.0,
+      "show_beat": 244.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 256.0,
+      "show_beat": 252.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 264.0,
+      "show_beat": 260.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 272.0,
+      "show_beat": 268.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 280.0,
+      "show_beat": 276.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 288.0,
+      "show_beat": 284.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.25,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.75,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 296.0,
+      "show_beat": 292.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.25,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.75,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 304.0,
+      "show_beat": 300.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 0.25,
+          "cell": 3.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 0.75,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.25,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.75,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.25,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 312.0,
+      "show_beat": 308.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.25,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.75,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 320.0,
+      "show_beat": 316.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 328.0,
+      "show_beat": 324.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.25,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 336.0,
+      "show_beat": 332.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.25,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 344.0,
+      "show_beat": 340.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 352.0,
+      "show_beat": 348.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 360.0,
+      "show_beat": 356.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.25,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 368.0,
+      "show_beat": 364.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 376.0,
+      "show_beat": 372.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.25,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 384.0,
+      "show_beat": 380.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 392.0,
+      "show_beat": 388.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 400.0,
+      "show_beat": 396.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 408.0,
+      "show_beat": 404.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.25,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 3.25,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 416.0,
+      "show_beat": 412.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 1.0
+        }
+      ],
+      "response_beat": 424.0,
+      "show_beat": 420.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 3.5,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 432.0,
+      "show_beat": 428.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 2.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 440.0,
+      "show_beat": 436.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 2.0
+        }
+      ],
+      "response_beat": 448.0,
+      "show_beat": 444.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 2.0
+        },
+        {
+          "beat": 0.5,
+          "cell": 3.0
+        },
+        {
+          "beat": 1.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 1.0
+        },
+        {
+          "beat": 3.0,
+          "cell": 3.0
+        }
+      ],
+      "response_beat": 456.0,
+      "show_beat": 452.0
+    },
+    {
+      "length_beats": 4.0,
+      "notes": [
+        {
+          "beat": 0.0,
+          "cell": 0.0
+        },
+        {
+          "beat": 1.5,
+          "cell": 0.0
+        },
+        {
+          "beat": 2.0,
+          "cell": 0.0
+        }
+      ],
+      "response_beat": 464.0,
+      "show_beat": 460.0
+    }
+  ],
+  "title": "The Descent Loop"
+}

@@ -1,0 +1,7 @@
+# Keep source files consistent across Windows and other development machines.
+* text=auto eol=lf
+
+# Windows launchers and PowerShell scripts use native line endings.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf

@@ -1,0 +1,43 @@
+# Godot cache and generated Android build files.
+/.godot/
+/android/.gradle/
+/android/build/
+
+# Downloaded engine/export templates and build outputs.
+/.tools/
+/builds/
+/build/
+/dist/
+*.apk
+*.aab
+*.pck
+
+# Export credentials, local environment settings, and signing keys.
+# Keep export_presets.cfg, resource *.import settings, and *.uid files in Git.
+export_credentials.cfg
+.env
+.env.*
+!.env.example
+!.env.template
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# Editor and operating-system files.
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Python caches and temporary files.
+__pycache__/
+*.py[cod]
+.venv/
+*.tmp
+*.bak
+*.log
