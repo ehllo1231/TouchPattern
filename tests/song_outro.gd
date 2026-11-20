@@ -38,8 +38,37 @@ func _run() -> void:
 	root.size = Vector2i(540, 960)
 	await _test_mode(false)
 	await _test_mode(true)
+	await _test_chart_outlasts_audio()
 	print("Song outro: %d checks, %d failures" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)
+
+
+func _test_chart_outlasts_audio() -> void:
+	var player := ObservedPlayer.new()
+	player.theme = AppStyle.make_theme()
+	player.auto_mode = true
+	root.add_child(player)
+	player.size = Vector2(540, 960)
+	player.clock.player.volume_db = -70.0
+	player.note_sounds.set_volume_percent(0.0, false)
+	player.chart = player.chart.duplicate(true)
+	player.chart.bpm = 120.0
+	player.chart.offset_seconds = 0.0
+	player.chart.phrases = [{"show_beat": 0.5, "response_beat": 1.0, "length_beats": 0.5, "notes": [{"beat": 0.0, "cell": 2}]}]
+	player.stream = _silence(0.2)
+	player._start()
+	var saw_silent_demo := false
+	var limit := Time.get_ticks_msec() + 2500
+	while player.state == "playing" and Time.get_ticks_msec() < limit:
+		await process_frame
+		if not player.clock.player.playing and player.demo_pad._glow[2] > 0.0:
+			saw_silent_demo = true
+	check(saw_silent_demo, "Demo notes continue visually after the audio becomes silent")
+	check(player.state == "finished" and player.session.counts.PERFECT == 1 and player.session.counts.MISS == 0, "AUTO plays and completes response notes beyond the end of the audio")
+	check(player.finished_seconds > player.stream.get_length() + 0.5 and player.progress.value == 100.0, "Results wait for the full silent chart tail instead of the shorter audio")
+	player.queue_free()
+	await process_frame
+	await create_timer(0.15).timeout
 
 
 func _test_mode(automatic: bool) -> void:

@@ -25,10 +25,19 @@ func start(stream: AudioStream, from_seconds: float = 0.0) -> void:
 	_output_latency = AudioServer.get_output_latency()
 	_last_seconds = _origin_seconds - _output_latency
 	_finished_usec = 0
+	_finished_seconds = 0.0
 	_origin_usec = Time.get_ticks_usec()
-	player.play(_origin_seconds)
 	running = true
 	_paused_seconds = _origin_seconds
+	if _origin_seconds >= stream.get_length():
+		# A chart can continue after its audio. Starting or resuming inside that
+		# silent tail still needs a monotonic song clock even though there is no
+		# audio frame for AudioStreamPlayer to seek to or finish.
+		_last_seconds = _origin_seconds
+		_finished_seconds = _origin_seconds
+		_finished_usec = maxi(1, Time.get_ticks_usec())
+		return
+	player.play(_origin_seconds)
 
 
 func seconds() -> float:
@@ -44,6 +53,10 @@ func seconds() -> float:
 	# Audio and main-thread reads can jitter; never move a running clock backward.
 	_last_seconds = maxf(_last_seconds, time)
 	return _last_seconds
+
+
+func audio_finished() -> bool:
+	return _finished_usec > 0 and not player.playing
 
 
 func _on_finished() -> void:

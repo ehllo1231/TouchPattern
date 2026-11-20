@@ -288,9 +288,6 @@ func _load_chart(path: String, from_phrase: int = -1) -> void:
 	if audio == null:
 		_message("음원을 열 수 없어요. WAV / OGG / MP3 경로를 확인해 주세요.", AppStyle.RED)
 		return
-	if audio.get_length() + 0.02 < TouchChart.beat_to_seconds(data, TouchChart.end_beat(data)) + RhythmSession.WINDOW:
-		_message("음원이 마지막 재현 구간보다 짧아요. 채보를 확인해 주세요.", AppStyle.RED)
-		return
 	clock.stop()
 	chart = data
 	chart_path = path
@@ -333,7 +330,7 @@ func _start() -> void:
 	_last_time = _start_seconds - 0.000001
 	state = "playing"
 	clock.start(stream, _start_seconds)
-	progress.value = clampf(_start_seconds / maxf(0.001, stream.get_length()), 0.0, 1.0) * 100.0
+	progress.value = clampf(_start_seconds / _run_end_seconds(), 0.0, 1.0) * 100.0
 	menu.hide()
 	input_pad.interactive = not auto_mode
 	_set_phase(str(session.phase_at(_start_seconds).kind))
@@ -390,6 +387,11 @@ func _process(_delta: float) -> void:
 	if state != "playing":
 		return
 	var time := clock.seconds()
+	# Starting a selected pattern beyond the audio cannot produce the player's
+	# natural finished signal. Treat an idle player past its duration as the
+	# same silent tail as a naturally completed stream.
+	if not _music_finished and clock.audio_finished() and time >= stream.get_length():
+		_music_finished = true
 	if not _judging_finished:
 		var judge_time := time if auto_mode else time - offset_ms / 1000.0
 		if auto_mode:
@@ -410,11 +412,18 @@ func _process(_delta: float) -> void:
 			input_pad.interactive = false
 			note_sounds.stop()
 			_set_phase("complete")
-	progress.value = clampf(time / maxf(0.001, stream.get_length()), 0.0, 1.0) * 100.0
+	progress.value = clampf(time / _run_end_seconds(), 0.0, 1.0) * 100.0
 	# Waiting for both conditions preserves the audible tail and the final
-	# judgment grace period, including positive timing compensation.
-	if _judging_finished and _music_finished and time >= stream.get_length():
+	# judgment grace period, including silent chart time and timing compensation.
+	if _judging_finished and _music_finished and time >= _run_end_seconds():
 		_finish()
+
+
+func _run_end_seconds() -> float:
+	var judgment_end := TouchChart.beat_to_seconds(chart, session.end_beat) + RhythmSession.WINDOW
+	if not auto_mode:
+		judgment_end += offset_ms / 1000.0
+	return maxf(0.001, maxf(stream.get_length(), judgment_end))
 
 
 func _on_music_finished() -> void:

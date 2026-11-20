@@ -519,9 +519,6 @@ func _audio_for_preview(require_notes: bool = true) -> AudioStream:
 	if audio == null:
 		_status("음원 경로를 확인해 주세요.", true)
 		return null
-	if audio.get_length() + 0.02 < TouchChart.beat_to_seconds(chart, TouchChart.end_beat(chart)) + RhythmSession.WINDOW:
-		_status("음원이 마지막 재현 구간보다 짧아요. 패턴 위치나 음원을 조정해 주세요.", true)
-		return null
 	return audio
 
 

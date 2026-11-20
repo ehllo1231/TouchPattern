@@ -28,6 +28,16 @@ func click_control(control: Control) -> void:
 	await process_frame
 
 
+func silence(duration: float) -> AudioStreamWAV:
+	var audio := AudioStreamWAV.new()
+	audio.format = AudioStreamWAV.FORMAT_16_BITS
+	audio.mix_rate = 22050
+	var samples := PackedByteArray()
+	samples.resize(int(duration * audio.mix_rate) * 2)
+	audio.data = samples
+	return audio
+
+
 func _run() -> void:
 	root.size = Vector2i(1100, 900)
 	var result := TouchChart.read(TouchChart.SAMPLE)
@@ -418,11 +428,55 @@ func _run() -> void:
 	maker._save_to(unnamed_path)
 	var unnamed := TouchChart.read(unnamed_path)
 	check(str(unnamed.error).is_empty() and not unnamed.chart.phrases[0].has("name") and maker.pattern_strip.thumbnails.size() == 1 and maker.pattern_strip.thumbnails[0].button_pressed, "A new chart saves and reloads without pattern names")
+	var silent_audio_path := "user://tests/silent_chart_tail.wav"
+	var silent_chart_path := "user://tests/silent_chart_tail.json"
+	check(silence(0.25).save_to_wav(silent_audio_path) == OK, "A short audio fixture is saved for silent-tail playback")
+	var silent_chart := chart.duplicate(true)
+	silent_chart.title = "Silent Chart Tail"
+	silent_chart.audio = silent_audio_path
+	silent_chart.bpm = 120.0
+	silent_chart.offset_seconds = 0.0
+	silent_chart.phrases = [{"show_beat": 2.0, "response_beat": 3.0, "length_beats": 1.0, "notes": [{"beat": 0.0, "cell": 2}]}]
+	check(TouchChart.write(silent_chart, silent_chart_path, silent_chart_path).is_empty(), "A chart can be saved when its authored timeline outlasts the audio")
+	var silent_track := SongLibrary.track(silent_chart_path)
+	check(str(silent_track.error).is_empty() and silent_track.title == "Silent Chart Tail", "The song library accepts a chart that continues after its audio")
+	maker._load_chart(silent_chart_path)
+	maker._listen()
+	check(maker.clock.running and not maker.clock.player.playing and maker.clock.seconds() >= 0.5, "Maker preview starts silently when the selected phrase begins after the audio")
+	maker._update_preview(TouchChart.beat_to_seconds(silent_chart, 2.0))
+	check(maker.preview_pad._glow[2] > 0.99 and maker.timeline.preview_highlights.has(0), "Maker demonstrates authored notes during the silent tail")
+	maker._stop_preview()
+	var silent_player := PlayerView.new()
+	silent_player.theme = AppStyle.make_theme()
+	silent_player.auto_mode = true
+	silent_player.initial_path = silent_chart_path
+	silent_player.initial_phrase = 0
+	root.add_child(silent_player)
+	await process_frame
+	check(silent_player.chart_path == silent_chart_path and silent_player.session.notes.size() == 1, "Player loads a chart longer than its audio")
+	silent_player._start()
+	check(silent_player.clock.running and not silent_player.clock.player.playing and silent_player.clock.seconds() >= 0.5, "Selected-pattern play starts on the silent timeline beyond the audio")
+	silent_player._pause()
+	var silent_pause_time := silent_player.clock.seconds()
+	silent_player._toggle()
+	check(silent_player.state == "playing" and silent_player.clock.running and not silent_player.clock.player.playing and silent_player.clock.seconds() >= silent_pause_time, "Silent-tail play pauses and resumes without restarting audio")
+	silent_player.clock.pause()
+	silent_player.clock._paused_seconds = TouchChart.beat_to_seconds(silent_chart, 2.0)
+	silent_player._process(0.0)
+	check(silent_player.demo_pad._glow[2] > 0.0, "Player demonstration remains active without music")
+	silent_player.clock._paused_seconds = TouchChart.beat_to_seconds(silent_chart, 3.0)
+	silent_player._process(0.0)
+	check(silent_player.session.counts.PERFECT == 1 and silent_player.session.counts.MISS == 0, "AUTO performs a response note in the silent tail")
+	silent_player.clock._paused_seconds = TouchChart.beat_to_seconds(silent_chart, 4.0) + RhythmSession.WINDOW + 0.001
+	silent_player._process(0.0)
+	check(silent_player.state == "finished" and silent_player.progress.value == 100.0, "Silent-tail play finishes after the authored chart deadline")
+	silent_player.queue_free()
+	await process_frame
 	maker.queue_free()
 	await process_frame
 	# Allow the native audio mixer to release its last WAV playback reference.
 	await create_timer(0.15).timeout
-	for path in [destination, relocated_path, snapshot_path, selected_path, unnamed_path, "user://tests/maker_saved.json"]:
+	for path in [destination, relocated_path, snapshot_path, selected_path, unnamed_path, silent_audio_path, silent_chart_path, "user://tests/maker_saved.json"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("TouchPattern: %d checks, %d failures" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)

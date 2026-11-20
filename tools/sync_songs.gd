@@ -18,8 +18,8 @@ func _run() -> void:
 		var chart: Dictionary = result.chart
 		var source_audio := TouchChart.audio_path(chart, source)
 		var audio := TouchChart.load_audio(source_audio)
-		if audio == null or audio.get_length() + 0.02 < TouchChart.beat_to_seconds(chart, TouchChart.end_beat(chart)) + RhythmSession.WINDOW:
-			_fail(str(song.title), "Audio is missing or shorter than the chart.")
+		if audio == null:
+			_fail(str(song.title), "Audio is missing or cannot be loaded.")
 			return
 		var filename := str(song.id) + "." + source_audio.get_extension().to_lower()
 		var destination_audio := "res://assets/audio/" + filename

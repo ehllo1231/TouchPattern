@@ -50,6 +50,17 @@ func _run() -> void:
 	clock.start(stream, stream.get_length() - 0.12)
 	await create_timer(0.6).timeout
 	check(clock.running and not clock.player.playing and clock.seconds() > stream.get_length() + 0.1, "Natural audio completion preserves the final judgment grace period")
+	var silent_start := stream.get_length() + 0.25
+	clock.start(stream, silent_start)
+	var silent_before := clock.seconds()
+	await create_timer(0.12).timeout
+	check(clock.running and not clock.player.playing and silent_before >= silent_start and clock.seconds() > silent_before + 0.08, "Starting beyond the audio advances a silent chart timeline")
+	clock.pause()
+	var silent_paused := clock.seconds()
+	await create_timer(0.05).timeout
+	clock.resume()
+	await create_timer(0.12).timeout
+	check(clock.running and not clock.player.playing and clock.seconds() > silent_paused + 0.08, "A silent chart tail resumes without restarting the finished audio")
 	clock.stop()
 	await create_timer(0.05).timeout
 	check(not clock.running and clock.seconds() == 0.0, "Stop clears the audio clock and its end-of-song tail")

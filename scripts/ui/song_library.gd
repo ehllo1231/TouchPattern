@@ -38,6 +38,4 @@ static func track(path: String = "") -> Dictionary:
 	var audio := TouchChart.load_audio(TouchChart.audio_path(chart, path))
 	if audio == null:
 		return {"path": path, "title": str(chart.title), "error": "곡의 음원을 찾을 수 없어요."}
-	if audio.get_length() + 0.02 < TouchChart.beat_to_seconds(chart, TouchChart.end_beat(chart)) + RhythmSession.WINDOW:
-		return {"path": path, "title": str(chart.title), "error": "음원이 마지막 패턴보다 짧아요. 채보를 확인해 주세요."}
 	return {"path": path, "title": str(chart.title), "artist": str(chart.get("artist", "")), "bpm": float(chart.bpm), "duration": audio.get_length(), "phrases": chart.phrases.size(), "error": ""}
