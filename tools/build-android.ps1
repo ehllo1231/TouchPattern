@@ -19,7 +19,10 @@ if (-not (Test-Path (Join-Path $RinnerTemplates 'android_debug.apk'))) {
     $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest -UseBasicParsing -Uri "$RinnerRelease/$RinnerArchiveName" -OutFile $RinnerArchive
     $RinnerSums = (Invoke-WebRequest -UseBasicParsing -Uri "$RinnerRelease/SHA512-SUMS.txt").Content
-    $RinnerLine = $RinnerSums -split "`n" | Where-Object { $_ -match ([regex]::Escape($RinnerArchiveName) + '$') }
+    if ($RinnerSums -is [byte[]]) {
+        $RinnerSums = [Text.Encoding]::UTF8.GetString($RinnerSums)
+    }
+    $RinnerLine = $RinnerSums -split "`n" | Where-Object { $_.TrimEnd() -match ([regex]::Escape($RinnerArchiveName) + '$') }
     if (-not $RinnerLine) { throw 'Official export template checksum not found.' }
     $RinnerExpected = ($RinnerLine.Trim() -split '\s+')[0]
     if ((Get-FileHash -Path $RinnerArchive -Algorithm SHA512).Hash -ne $RinnerExpected) {
