@@ -2,8 +2,8 @@ class_name TileFeedback
 extends Control
 
 # This layer only renders judgments. It never owns input or a song clock.
-const DURATIONS := {"PERFECT": 0.44, "GOOD": 0.38, "OK": 0.34, "MISS": 0.32, "WRONG": 0.32}
-const COLORS := {"PERFECT": Color("81fff0"), "GOOD": Color("79dfe9"), "OK": Color("e6d995"), "MISS": Color("e281a3"), "WRONG": Color("e281a3")}
+const DURATIONS := {"PERFECT": 0.44, "GOOD": 0.38, "OK": 0.34, "MISS": 0.32}
+const COLORS := {"PERFECT": Color("81fff0"), "GOOD": Color("79dfe9"), "OK": Color("e6d995"), "MISS": Color("e281a3")}
 
 var grid: GridPad
 var kinds: Array[String] = ["", "", "", ""]
@@ -64,7 +64,7 @@ func _draw() -> void:
 		var opacity := 1.0 - smoothstep(0.2, 1.0, t)
 		var color: Color = COLORS[kind]
 		color.a = opacity
-		var failed := kind in ["MISS", "WRONG"]
+		var failed := kind == "MISS"
 		if failed:
 			_draw_corners(rect.grow(-width * 0.12), Color(color, opacity * 0.6))
 		else:

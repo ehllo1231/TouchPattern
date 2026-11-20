@@ -14,9 +14,8 @@ var notes: Array[Dictionary] = []
 var score := 0
 var combo := 0
 var max_combo := 0
-var mistakes := 0
 var resolved := 0
-var counts: Dictionary = {"PERFECT": 0, "GOOD": 0, "OK": 0, "MISS": 0, "WRONG": 0}
+var counts: Dictionary = {"PERFECT": 0, "GOOD": 0, "OK": 0, "MISS": 0}
 
 
 func _init(data: Dictionary, from_beat: float = -INF) -> void:
@@ -71,15 +70,14 @@ func hit(cell: int, song_seconds: float) -> String:
 		return kind
 	if phase_at(song_seconds).kind == "response":
 		combo = 0
-		mistakes += 1
-		counts.WRONG += 1
-		judged.emit("WRONG", cell, 0.0)
-		return "WRONG"
+		counts.MISS += 1
+		judged.emit("MISS", cell, 0.0)
+		return "MISS"
 	return "IGNORED"
 
 
 func accuracy() -> float:
-	var denominator := resolved + mistakes
+	var denominator: int = counts.PERFECT + counts.GOOD + counts.OK + counts.MISS
 	return 100.0 * float(score) / float(denominator * 1000) if denominator > 0 else 100.0
 
 

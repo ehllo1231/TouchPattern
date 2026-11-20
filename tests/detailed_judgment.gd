@@ -89,9 +89,8 @@ func _run() -> void:
 	check(player.timing_readout.visible and player.timing_readout.value_label.text == "+72.4", "A new input replaces the old readout without an older fade hiding it")
 	player._judged("PERFECT", 0, -0.001)
 	check(player.timing_readout.value_label.text == "+0.0" and player.timing_readout.direction_label.text == "ON TIME", "Near-zero errors do not show a misleading negative zero")
-	for kind in ["MISS", "WRONG"]:
-		player._judged(kind, 0, 0.0)
-		check(player.timing_readout.value_label.text == "—" and player.timing_readout.direction_label.text == "NO TIMING" and not player.timing_readout.has_timing, "%s does not invent a zero-ms hit or repeat a grade outside the tile" % kind)
+	player._judged("MISS", 0, 0.0)
+	check(player.timing_readout.value_label.text == "—" and player.timing_readout.direction_label.text == "NO TIMING" and not player.timing_readout.has_timing, "MISS does not invent a zero-ms hit or repeat a grade outside the tile")
 	player.detailed_judgment_check.button_pressed = false
 	check(not player.detailed_judgment and not player.timing_readout.visible, "Turning the option off clears the current detail immediately")
 	player._judged("OK", 0, 123.4)

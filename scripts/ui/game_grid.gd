@@ -4,7 +4,7 @@ extends GridPad
 const TILE_SHADER = preload("res://scripts/ui/game_tile.gdshader")
 const VIOLET := Color("bb92f5")
 const TEAL := Color("65eee0")
-const STRENGTH := {"PERFECT": 1.0, "GOOD": 0.67, "OK": 0.43, "MISS": 0.32, "WRONG": 0.32}
+const STRENGTH := {"PERFECT": 1.0, "GOOD": 0.67, "OK": 0.43, "MISS": 0.32}
 
 var accent := VIOLET
 var feedback := TileFeedback.new()
@@ -80,7 +80,7 @@ func flash(cell: int, failed: bool = false, strength: float = 1.0) -> void:
 func show_judgment(cell: int, kind: String) -> void:
 	if cell < 0 or cell > 3 or not STRENGTH.has(kind):
 		return
-	flash(cell, kind in ["MISS", "WRONG"], float(STRENGTH[kind]))
+	flash(cell, kind == "MISS", float(STRENGTH[kind]))
 	_hit_colors[cell] = TileFeedback.COLORS[kind]
 	_judgment_mode[cell] = true
 	_decay[cell] = float(STRENGTH[kind]) * 3.5

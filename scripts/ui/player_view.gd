@@ -377,7 +377,7 @@ func _show_menu() -> void:
 	restart_button.visible = state == "paused"
 	menu_results.visible = state == "finished"
 	if state == "finished":
-		menu_results.text = "%06d  ·  최대 콤보 %d\n정확도 %.1f%%\n\nPERFECT %d  ·  GOOD %d  ·  OK %d\nMISS %d  ·  WRONG %d" % [session.score, session.max_combo, session.accuracy(), session.counts.PERFECT, session.counts.GOOD, session.counts.OK, session.counts.MISS, session.counts.WRONG]
+		menu_results.text = "%06d  ·  최대 콤보 %d\n정확도 %.1f%%\n\nPERFECT %d  ·  GOOD %d  ·  OK %d\nMISS %d" % [session.score, session.max_combo, session.accuracy(), session.counts.PERFECT, session.counts.GOOD, session.counts.OK, session.counts.MISS]
 	settings_panel.hide()
 	menu_scroller.scroll_vertical = 0
 	menu.show()

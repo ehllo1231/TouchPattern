@@ -51,7 +51,7 @@ func show_judgment(kind: String, offset: float) -> void:
 		direction_label.text = "EARLY" if displayed < 0.0 else ("LATE" if displayed > 0.0 else "ON TIME")
 		accent = GameGrid.VIOLET if displayed < 0.0 else GameGrid.TEAL
 	else:
-		# A missed note or wrong cell has no matched input offset.
+		# A missed note or unmatched cell has no timing offset.
 		value_label.text = "—"
 		direction_label.text = "NO TIMING"
 		accent = AppStyle.RED

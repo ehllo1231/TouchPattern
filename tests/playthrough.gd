@@ -42,8 +42,8 @@ func _run() -> void:
 			push_error("Full-song playthrough timed out")
 			quit(1)
 			return
-	var success: bool = player.state == "finished" and player.session.counts.PERFECT == expected_notes and player.session.score == expected_notes * 1000 and player.session.counts.MISS == 0 and player.session.mistakes == 0
-	print("%s %s playthrough: score=%d, perfect=%d, misses=%d, wrong=%d" % ["Selected-pattern" if selected_test else "Full-song", "AUTO" if auto_test else "keyboard", player.session.score, player.session.counts.PERFECT, player.session.counts.MISS, player.session.mistakes])
+	var success: bool = player.state == "finished" and player.session.counts.PERFECT == expected_notes and player.session.score == expected_notes * 1000 and player.session.counts.MISS == 0
+	print("%s %s playthrough: score=%d, perfect=%d, misses=%d" % ["Selected-pattern" if selected_test else "Full-song", "AUTO" if auto_test else "keyboard", player.session.score, player.session.counts.PERFECT, player.session.counts.MISS])
 	app.queue_free()
 	await process_frame
 	await create_timer(0.15).timeout
