@@ -505,11 +505,39 @@ func _run() -> void:
 	check(silent_player.state == "finished" and silent_player.progress.value == 100.0, "Silent-tail play finishes after the authored chart deadline")
 	silent_player.queue_free()
 	await process_frame
+	var recent_preferences := "user://tests/recent_chart_maker.cfg"
+	maker.preferences_path = recent_preferences
+	maker.remember_recent_chart = true
+	check(maker._load_chart(unnamed_path), "Maker opens a chart before remembering it")
+	var recent_settings := ConfigFile.new()
+	check(recent_settings.load(recent_preferences) == OK and str(recent_settings.get_value("chart_maker", "recent_chart_path", "")) == unnamed_path, "Maker stores the most recently opened chart path")
 	maker.queue_free()
+	await process_frame
+	var restored_maker := ChartMaker.new()
+	restored_maker.theme = AppStyle.make_theme()
+	restored_maker.preferences_path = recent_preferences
+	restored_maker.remember_recent_chart = true
+	restored_maker.restore_recent_chart = true
+	root.add_child(restored_maker)
+	await process_frame
+	check(restored_maker.chart_path == unnamed_path and restored_maker.chart.title == unnamed.chart.title, "A new maker session restores the most recent chart")
+	restored_maker.queue_free()
+	await process_frame
+	recent_settings.set_value("chart_maker", "recent_chart_path", "user://tests/missing_recent_chart.json")
+	recent_settings.save(recent_preferences)
+	var fallback_maker := ChartMaker.new()
+	fallback_maker.theme = AppStyle.make_theme()
+	fallback_maker.preferences_path = recent_preferences
+	fallback_maker.remember_recent_chart = true
+	fallback_maker.restore_recent_chart = true
+	root.add_child(fallback_maker)
+	await process_frame
+	check(fallback_maker.chart_path == TouchChart.SAMPLE and "기본 채보" in fallback_maker.status_label.text, "A missing recent chart safely falls back to the bundled sample")
+	fallback_maker.queue_free()
 	await process_frame
 	# Allow the native audio mixer to release its last WAV playback reference.
 	await create_timer(0.15).timeout
-	for path in [destination, ending_path, relocated_path, snapshot_path, selected_path, unnamed_path, silent_audio_path, silent_chart_path, "user://tests/maker_saved.json"]:
+	for path in [destination, ending_path, relocated_path, snapshot_path, selected_path, unnamed_path, silent_audio_path, silent_chart_path, recent_preferences, "user://tests/maker_saved.json"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("TouchPattern: %d checks, %d failures" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)

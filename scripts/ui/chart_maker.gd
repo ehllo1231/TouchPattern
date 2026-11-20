@@ -5,6 +5,9 @@ const PREVIEW_FLASH_SECONDS := 0.18
 const PREVIEW_HINT := "입력 시점에 테두리가 빛나요."
 
 var initial_path := TouchChart.SAMPLE
+var preferences_path := "user://settings.cfg"
+var remember_recent_chart := false
+var restore_recent_chart := false
 var chart_path := ""
 var chart: Dictionary = {}
 var selected := 0
@@ -54,9 +57,14 @@ func _ready() -> void:
 	add_child(clock)
 	add_child(note_sounds)
 	_build_ui()
-	_load_chart(TouchChart.SAMPLE)
-	if initial_path != TouchChart.SAMPLE:
-		_load_chart(initial_path)
+	var startup_path := initial_path
+	if restore_recent_chart:
+		var recent_path := _recent_chart_path()
+		if not recent_path.is_empty():
+			startup_path = recent_path
+	if not _load_chart(startup_path) and startup_path != TouchChart.SAMPLE:
+		_load_chart(TouchChart.SAMPLE)
+		_status("최근 채보를 열 수 없어 기본 채보를 열었어요. 파일 위치를 확인해 주세요.", true)
 
 
 func _build_ui() -> void:
@@ -297,11 +305,11 @@ func _setup_dialog(dialog: FileDialog, mode: FileDialog.FileMode, filters: Packe
 	add_child(dialog)
 
 
-func _load_chart(path: String) -> void:
+func _load_chart(path: String) -> bool:
 	var result := TouchChart.read(path)
 	if not str(result.error).is_empty():
 		_status(str(result.error), true)
-		return
+		return false
 	_stop_preview()
 	_invalidate_bpm_search()
 	chart = result.chart
@@ -309,7 +317,25 @@ func _load_chart(path: String) -> void:
 	selected = 0
 	dirty = false
 	_refresh()
+	_remember_chart(path)
 	_status("채보를 열었어요. 노트를 편집하거나 플레이 테스트를 눌러 보세요.")
+	return true
+
+
+func _recent_chart_path() -> String:
+	var settings := ConfigFile.new()
+	if settings.load(preferences_path) != OK:
+		return ""
+	return str(settings.get_value("chart_maker", "recent_chart_path", ""))
+
+
+func _remember_chart(path: String) -> void:
+	if not remember_recent_chart:
+		return
+	var settings := ConfigFile.new()
+	settings.load(preferences_path)
+	settings.set_value("chart_maker", "recent_chart_path", path)
+	settings.save(preferences_path)
 
 
 func _refresh() -> void:
@@ -572,6 +598,7 @@ func _save_to(path: String) -> void:
 	chart_path = path
 	dirty = false
 	_refresh()
+	_remember_chart(path)
 	_status("저장했어요: " + ProjectSettings.globalize_path(path))
 
 

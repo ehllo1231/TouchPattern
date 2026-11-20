@@ -20,6 +20,8 @@ func _ready() -> void:
 		DisplayServer.window_set_size(Vector2i(1100, 900))
 		var maker := ChartMaker.new()
 		maker.initial_path = chart_path
+		maker.remember_recent_chart = true
+		maker.restore_recent_chart = chart_index < 0
 		DisplayServer.window_set_title("RINNER · Chart Maker")
 		_replace_view(maker)
 	elif skip_frontend or chart_index >= 0 or args.has("--autoplay") or args.has("--auto-mode") or args.has("--start-phrase"):
