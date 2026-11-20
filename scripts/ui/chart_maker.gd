@@ -25,6 +25,11 @@ var play_from_selection_check := CheckBox.new()
 var auto_mode_check := CheckBox.new()
 var title_edit := LineEdit.new()
 var bpm_spin := SpinBox.new()
+var bpm_find_button: Button
+var _bpm_thread: Thread
+var _bpm_detector: BpmDetector
+var _bpm_revision := 0
+var _bpm_request_revision := 0
 var offset_spin := SpinBox.new()
 var audio_edit := LineEdit.new()
 var show_spin := SpinBox.new()
@@ -85,7 +90,13 @@ func _build_ui() -> void:
 	title_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_field(fields, "곡 제목", title_edit, true)
 	_setup_spin(bpm_spin, 30, 300, 0.001)
-	_field(fields, "BPM", bpm_spin)
+	var bpm_controls := HBoxContainer.new()
+	bpm_spin.custom_minimum_size.x = 105
+	bpm_controls.add_child(bpm_spin)
+	bpm_find_button = AppStyle.button("BPM 자동 찾기", _find_bpm)
+	bpm_find_button.tooltip_text = "음원을 분석해 소수점 셋째 자리까지 입력해요. 반·두 배 박자는 현재 BPM을 참고해 선택해요."
+	bpm_controls.add_child(bpm_find_button)
+	_field(fields, "BPM", bpm_controls)
 	_setup_spin(offset_spin, -600, 600, 0.001)
 	offset_spin.suffix = " 초"
 	_field(fields, "첫 박자 오프셋", offset_spin)
@@ -96,6 +107,7 @@ func _build_ui() -> void:
 	)
 	bpm_spin.value_changed.connect(func(value: float) -> void:
 		if not _updating:
+			_invalidate_bpm_search()
 			_stop_preview()
 			chart.bpm = value
 			_mark_dirty()
@@ -280,6 +292,7 @@ func _load_chart(path: String) -> void:
 		_status(str(result.error), true)
 		return
 	_stop_preview()
+	_invalidate_bpm_search()
 	chart = result.chart
 	chart_path = path
 	selected = 0
@@ -390,6 +403,7 @@ func _delete_phrase() -> void:
 
 func _new_chart() -> void:
 	_stop_preview()
+	_invalidate_bpm_search()
 	var audio := TouchChart.audio_path(chart, chart_path)
 	chart = {"format_version": 1, "title": "새 곡", "artist": "", "bpm": 112.0, "offset_seconds": 0.0, "audio": audio, "grid": {"rows": 2, "columns": 2}, "phrases": [{"show_beat": 4.0, "response_beat": 8.0, "length_beats": 4.0, "notes": []}]}
 	chart_path = "user://charts/untitled.json"
@@ -404,11 +418,67 @@ func _set_audio(path: String) -> void:
 		_status("음원을 열 수 없어요. 지원하는 WAV / OGG / MP3 파일을 선택해 주세요.", true)
 		return
 	_stop_preview()
+	_invalidate_bpm_search()
 	chart.audio = path
 	audio_edit.text = path
 	_mark_dirty()
 	var duration := int(ceil(audio.get_length()))
 	_status("음원을 불러왔어요: %s · %d:%02d · 구간 듣기로 확인해 보세요." % [path.get_file(), duration / 60, duration % 60])
+
+
+func _find_bpm() -> void:
+	if _bpm_thread != null:
+		return
+	_stop_preview()
+	var audio := TouchChart.load_audio(TouchChart.audio_path(chart, chart_path))
+	if audio == null:
+		_status("음원을 열 수 없어요. 음원 경로를 확인해 주세요.", true)
+		return
+	_bpm_detector = BpmDetector.new()
+	_bpm_request_revision = _bpm_revision
+	_bpm_thread = Thread.new()
+	var error := _bpm_thread.start(_bpm_detector.analyze.bind(audio.duplicate(), bpm_spin.value), Thread.PRIORITY_LOW)
+	if error != OK:
+		_bpm_thread = null
+		_bpm_detector = null
+		_status("BPM 분석을 시작할 수 없어요. 다시 시도해 주세요.", true)
+		return
+	bpm_find_button.disabled = true
+	bpm_find_button.text = "분석 중 · 0%"
+	_status("음원에서 BPM을 찾고 있어요. 분석이 끝나면 BPM 칸에 입력해요.")
+
+
+func _invalidate_bpm_search() -> void:
+	_bpm_revision += 1
+	if _bpm_detector != null:
+		_bpm_detector.cancel()
+
+
+func _poll_bpm_search() -> void:
+	if _bpm_thread == null:
+		return
+	if _bpm_thread.is_alive():
+		bpm_find_button.text = "분석 중 · %d%%" % _bpm_detector.progress()
+		return
+	var result: Dictionary = _bpm_thread.wait_to_finish()
+	_bpm_thread = null
+	_bpm_detector = null
+	bpm_find_button.disabled = false
+	bpm_find_button.text = "BPM 자동 찾기"
+	# Loading another chart/audio or typing BPM supersedes the old result.
+	if _bpm_request_revision != _bpm_revision:
+		return
+	if not str(result.error).is_empty():
+		_status(str(result.error), true)
+		return
+	bpm_spin.value = float(result.bpm)
+	_status("BPM 자동 찾기 완료 · %.3f BPM을 입력했어요. 구간 듣기로 박자를 확인해 주세요." % float(result.bpm))
+
+
+func _exit_tree() -> void:
+	if _bpm_thread != null:
+		_bpm_detector.cancel()
+		_bpm_thread.wait_to_finish()
 
 
 func _save() -> void:
@@ -528,6 +598,7 @@ func _play_test() -> void:
 
 
 func _process(_delta: float) -> void:
+	_poll_bpm_search()
 	if not clock.running:
 		return
 	var time := clock.seconds()

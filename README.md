@@ -99,6 +99,10 @@ godot --headless --path . --export-debug Android builds/android/RINNER-debug.apk
 5. **구간 듣기**는 선택한 패턴의 시범부터 재현까지, **연속 듣기**는 선택한 패턴부터 마지막 재현 구간까지 재생합니다. 연속 듣기에서는 음악을 끊지 않고 현재 패턴의 미리보기와 타임라인을 자동으로 선택하며, 선택한 미리보기가 보이도록 스크롤합니다. 두 방식 모두 시범·재현 노트의 정확한 입력 시점(오차 0ms)에 타임라인 오른쪽 U/I/J/K 칸과 노트의 테두리가 짧게 빛납니다. 동시치기도 함께 표시되며, BPM과 첫 박자 오프셋을 반영합니다. 노트를 배치하기 전에도 들을 수 있으며, **정지**를 누르거나 패턴을 직접 선택·편집하면 재생이 멈춥니다. **플레이 테스트 ↗** 옆의 **선택 구간부터**를 체크하면 선택한 패턴의 시범 시작 한 박자 전부터, 해제하면 곡 처음부터 마지막 구간까지 테스트합니다. 기본값은 체크 상태입니다. 편집 중인 채보의 임시 스냅샷을 별도 플레이어에서 열며, 건너뛴 패턴은 판정에서 제외하고 R로 다시 시작해도 같은 위치부터 재시도합니다.
 6. **저장 / Ctrl+S**로 JSON을 저장합니다. 기본 폴더는 Godot 사용자 데이터 안의 `charts`이며, 저장 후 전체 경로를 화면에 표시합니다. 게임에서 **채보 열기**로 불러옵니다.
 
+**BPM 자동 찾기:** 음원을 선택한 뒤 BPM 칸 옆의 버튼을 누르면 WAV·OGG·MP3의 박자를 분석해 소수점 셋째 자리(`0.001 BPM`)로 반올림한 추정값을 바로 입력합니다. 분석 진행률을 표시하며 편집도 계속할 수 있습니다. 별도 프로그램 설치나 인터넷 연결은 필요하지 않습니다. BPM 변경은 **저장 / Ctrl+S**로 저장하세요. 첫 박자 오프셋과 노트는 유지합니다.
+
+8초 이상의 고정 BPM 음원에 적합합니다. 소수점 세 자리는 결과의 표시·입력 단위이며, 실제 측정 오차가 항상 `±0.001 BPM`이라는 뜻은 아닙니다. 반·두 배로 셀 수 있는 박자는 현재 BPM을 참고하므로, 결과가 반·두 배로 느껴지면 대략적인 BPM을 입력한 뒤 다시 분석하세요. 템포가 바뀌거나 박자가 불분명한 곡은 구간 듣기로 확인하고 직접 보정하세요. 분석 실패 시 기존 BPM을 유지하며, 분석 중 음원·채보를 바꾸거나 BPM을 직접 수정하면 이전 분석 결과는 적용하지 않습니다.
+
 **플레이 테스트 ↗** 옆의 **AUTO**를 체크하면 PC가 정답 타이밍에 자동으로 입력하는 시범 플레이를 보여줍니다. 기본값은 해제 상태이며, **선택 구간부터** 설정도 함께 적용됩니다. AUTO 창의 상단에는 작은 AUTO 표시가 있으며 시범과 재현의 입력 칸이 빛납니다. 수동 입력은 받지 않으며 Space·Esc로 일시정지하고 R로 다시 시작할 수 있습니다. 수동 입력 타이밍 보정은 자동 연주에 적용하지 않습니다.
 
 박수는 실험용으로 따로 분리했습니다. `assets/audio/note_sound_config.tres`에서 `sound` 참조만 바꾸면 다른 효과음으로 교체할 수 있습니다. `volume_db`는 사용자가 음량을 저장하기 전의 기본 박수 음량(현재 -12dB, 약 25%), `demo_enabled`·`input_enabled`·`preview_enabled`는 적용 범위, `combine_simultaneous`는 동시 입력 합치기, `polyphony`는 겹쳐 재생할 수 있는 수입니다. `enabled_by_default`는 저장된 사용자 설정이 없을 때의 기본값입니다. 사용자 음량은 `user://settings.cfg`의 `[note_feedback] volume_percent`에 저장합니다. 소리 재생 코드는 `scripts/core/note_sounds.gd`, 공통 음량 UI는 `scripts/ui/note_volume_control.gd`에 모았고 판정 로직과 분리되어 있습니다. 기본 음원은 직접 합성한 `assets/audio/clap.wav`이며, `python3 tools/generate_clap.py`로 외부 라이브러리 없이 재생성할 수 있습니다. 음원·설정 파일을 수정한 뒤 앱을 다시 열면 적용됩니다.
@@ -138,6 +142,7 @@ godot --headless --path . --export-debug Android builds/android/RINNER-debug.apk
 
 - `scripts/core/touch_chart.gd`: 채보 검증, 파일 입출력, 박자 변환, 음원 경로
 - `scripts/core/song_clock.gd`: 실제 오디오 재생 위치와 출력 지연을 반영하는 시계, 일시정지·재개
+- `scripts/core/bpm_detector.gd`: 음원을 소리 없이 분석하는 BPM 추정기, 배경 분석·진행률·취소
 - `scripts/core/rhythm_session.gd`: 시범·재현 구간과 판정
 - `scripts/core/note_sounds.gd`, `note_sound_config.gd`: 교체 가능한 노트 효과음과 설정
 - `scripts/ui/player_view.gd`: 플레이어
@@ -159,6 +164,7 @@ godot --headless --path . --script tests/run_tests.gd
 godot --headless --max-fps 120 --path . --script tests/player_ui.gd
 godot --headless --max-fps 120 --path . --script tests/front_flow.gd
 godot --headless --max-fps 120 --path . --script tests/bpm_precision.gd
+godot --headless --max-fps 120 --path . --script tests/bpm_detection.gd
 godot --headless --max-fps 120 --path . --script tests/detailed_judgment.gd
 godot --headless --max-fps 120 --path . --script tests/song_outro.gd
 godot --headless --max-fps 120 --path . --script tests/song_clock.gd
@@ -179,6 +185,8 @@ godot --headless --max-fps 120 --path . --script tests/playthrough.gd -- --auto-
 `front_flow.gd`는 7개 화면 크기의 타이틀·두 곡 선택 배치, 화면 전체 터치, 중복 전환 방지, 각 카드와 선택한 곡의 연결, 일시정지·결과 메뉴에서 복귀, 두 번째 카드의 키보드 선택, 누락된 곡의 오류 처리를 확인합니다. 실제 Electric Dreams MP3의 마지막 3초를 재생하고 원본 채보의 모든 노트를 AUTO 판정하여 후주와 결과 화면 연결도 검증합니다.
 
 `bpm_precision.gd`는 BPM `116.123`의 실제 입력 확정, `0.001` 단위 조절, JSON 저장·재로딩, 긴 구간의 박자/시간 변환, 미리듣기, 판정 경계와 AUTO 점수를 확인합니다. 자릿수 확장은 기존 실수형 BPM 계산과 오디오 시계를 그대로 사용하며 프레임당 계산 횟수를 늘리지 않습니다.
+
+`bpm_detection.gd`는 소수 BPM의 합성 박자, 엇박자·역위상 스테레오·작은 음량, 포함된 WAV·MP3 곡의 분석, 실제 버튼 클릭과 비동기 입력·저장, 분석 중 수정·음원 교체·창 종료, 무음·짧은 음원·없는 파일의 실패 처리를 확인합니다.
 
 `detailed_judgment.gd`는 실제 터치로 옵션 켜기, 설정 저장·복원, 보정 후 실제 입력의 부호·수치와 점수, 표시 위치, 재입력·페이드·일시정지·재시작, MISS·WRONG 처리, 작은 화면에서의 메뉴 스크롤을 확인합니다. `scripts/ui/timing_readout.gd`는 판정 신호가 전달한 오차만 표시하는 독립 UI이며 입력이나 판정 시계를 계산하지 않습니다.
 
