@@ -23,7 +23,7 @@ func _ready() -> void:
 	add_child(_row)
 
 
-func set_phrases(phrases: Array) -> void:
+func set_phrases(phrases: Array, audio_end_beat: float = INF) -> void:
 	var layout_changed := thumbnails.size() != phrases.size()
 	if thumbnails.size() != phrases.size():
 		for thumbnail in thumbnails:
@@ -39,7 +39,9 @@ func set_phrases(phrases: Array) -> void:
 	var beat := 0.0
 	for index in range(phrases.size()):
 		var previous_width := thumbnails[index].custom_minimum_size.x
-		thumbnails[index].set_phrase(phrases[index], index, beat)
+		var phrase: Dictionary = phrases[index]
+		var ends_audio := is_finite(audio_end_beat) and is_equal_approx(audio_end_beat, float(phrase.response_beat) + float(phrase.length_beats))
+		thumbnails[index].set_phrase(phrase, index, beat, ends_audio)
 		layout_changed = layout_changed or not is_equal_approx(previous_width, thumbnails[index].custom_minimum_size.x)
 		beat += float(phrases[index].length_beats)
 	if layout_changed:

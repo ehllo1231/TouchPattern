@@ -54,8 +54,13 @@ func _test_chart_outlasts_audio() -> void:
 	player.chart = player.chart.duplicate(true)
 	player.chart.bpm = 120.0
 	player.chart.offset_seconds = 0.0
-	player.chart.phrases = [{"show_beat": 0.5, "response_beat": 1.0, "length_beats": 0.5, "notes": [{"beat": 0.0, "cell": 2}]}]
-	player.stream = _silence(0.2)
+	player.chart.audio_end_beat = 0.4
+	player.chart.fade_out_seconds = 0.1
+	player.chart.phrases = [
+		{"show_beat": 0.0, "response_beat": 0.2, "length_beats": 0.2, "notes": [{"beat": 0.0, "cell": 0}]},
+		{"show_beat": 0.5, "response_beat": 1.0, "length_beats": 0.5, "notes": [{"beat": 0.0, "cell": 2}]}
+	]
+	player.stream = _silence(1.5)
 	player._start()
 	var saw_silent_demo := false
 	var limit := Time.get_ticks_msec() + 2500
@@ -64,8 +69,8 @@ func _test_chart_outlasts_audio() -> void:
 		if not player.clock.player.playing and player.demo_pad._glow[2] > 0.0:
 			saw_silent_demo = true
 	check(saw_silent_demo, "Demo notes continue visually after the audio becomes silent")
-	check(player.state == "finished" and player.session.counts.PERFECT == 1 and player.session.counts.MISS == 0, "AUTO plays and completes response notes beyond the end of the audio")
-	check(player.finished_seconds > player.stream.get_length() + 0.5 and player.progress.value == 100.0, "Results wait for the full silent chart tail instead of the shorter audio")
+	check(player.state == "finished" and player.session.counts.PERFECT == 2 and player.session.counts.MISS == 0, "AUTO plays and completes response notes beyond the authored audio ending")
+	check(player.finished_seconds > 0.85 and player.finished_seconds < player.stream.get_length() and player.progress.value == 100.0, "Results wait for the silent chart tail instead of the uncut audio length")
 	player.queue_free()
 	await process_frame
 	await create_timer(0.15).timeout

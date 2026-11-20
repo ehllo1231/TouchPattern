@@ -35,6 +35,8 @@ var audio_edit := LineEdit.new()
 var show_spin := SpinBox.new()
 var response_spin := SpinBox.new()
 var length_spin := SpinBox.new()
+var fade_spin := SpinBox.new()
+var audio_end_button: Button
 var pattern_strip := PatternStrip.new()
 var pattern_label: Label
 var status_label: Label
@@ -144,9 +146,18 @@ func _build_ui() -> void:
 	_field(phrase_fields, "시범 시작 (박)", show_spin)
 	_field(phrase_fields, "재현 시작 (박)", response_spin)
 	_field(phrase_fields, "길이 (박)", length_spin)
+	_setup_spin(fade_spin, 0, TouchChart.MAX_FADE_OUT_SECONDS, 0.1)
+	fade_spin.suffix = " 초"
+	fade_spin.value = TouchChart.DEFAULT_FADE_OUT_SECONDS
+	_field(phrase_fields, "페이드 아웃", fade_spin)
+	audio_end_button = AppStyle.button("여기서 곡 종료", _toggle_audio_end)
+	audio_end_button.tooltip_text = "선택한 패턴의 재현이 끝날 때 음악을 페이드 아웃하고, 이후 채보는 무음으로 진행해요."
+	_field(phrase_fields, "음원 종료", audio_end_button)
+	audio_end_button.custom_minimum_size.x = 142
 	show_spin.value_changed.connect(func(value: float) -> void: _change_phrase("show_beat", value))
 	response_spin.value_changed.connect(func(value: float) -> void: _change_phrase("response_beat", value))
 	length_spin.value_changed.connect(_change_length)
+	fade_spin.value_changed.connect(_change_fade_out)
 	var snap := OptionButton.new()
 	for denominator in [1, 2, 4, 8]:
 		snap.add_item("1/%d박" % denominator, denominator)
@@ -314,7 +325,7 @@ func _refresh() -> void:
 
 
 func _refresh_strip() -> void:
-	pattern_strip.set_phrases(chart.phrases)
+	pattern_strip.set_phrases(chart.phrases, TouchChart.audio_end_beat(chart))
 	pattern_strip.select(selected)
 	pattern_label.text = "패턴 %02d / %02d" % [selected + 1, chart.phrases.size()]
 
@@ -331,6 +342,7 @@ func _display_phrase(index: int) -> void:
 	show_spin.value = float(phrase.show_beat)
 	response_spin.value = float(phrase.response_beat)
 	length_spin.value = float(phrase.length_beats)
+	_refresh_audio_end_controls()
 	_updating = false
 	timeline.set_phrase(phrase)
 	pattern_strip.select(selected)
@@ -341,8 +353,12 @@ func _change_phrase(key: String, value: Variant) -> void:
 	if _updating or chart.is_empty():
 		return
 	_stop_preview()
+	var moves_audio_end := _selected_has_audio_end()
 	chart.phrases[selected][key] = value
+	if moves_audio_end:
+		chart.audio_end_beat = _selected_response_end()
 	_refresh_strip()
+	_refresh_audio_end_controls()
 	_mark_dirty()
 
 
@@ -394,11 +410,60 @@ func _delete_phrase() -> void:
 		_status("패턴은 하나 이상 남겨 주세요.", true)
 		return
 	_stop_preview()
+	if _selected_has_audio_end():
+		chart.erase("audio_end_beat")
+		chart.erase("fade_out_seconds")
 	chart.phrases.remove_at(selected)
 	selected = mini(selected, chart.phrases.size() - 1)
 	_refresh_strip()
 	_select_phrase(selected)
 	_mark_dirty()
+
+
+func _selected_response_end() -> float:
+	var phrase: Dictionary = chart.phrases[selected]
+	return float(phrase.response_beat) + float(phrase.length_beats)
+
+
+func _selected_has_audio_end() -> bool:
+	return TouchChart.has_audio_end(chart) and is_equal_approx(TouchChart.audio_end_beat(chart), _selected_response_end())
+
+
+func _refresh_audio_end_controls() -> void:
+	if audio_end_button == null or chart.is_empty():
+		return
+	var selected_end := _selected_has_audio_end()
+	audio_end_button.text = "✓ 여기서 곡 종료" if selected_end else "여기서 곡 종료"
+	fade_spin.set_value_no_signal(TouchChart.fade_out_seconds(chart) if TouchChart.has_audio_end(chart) else TouchChart.DEFAULT_FADE_OUT_SECONDS)
+
+
+func _toggle_audio_end() -> void:
+	if chart.is_empty():
+		return
+	_stop_preview()
+	if _selected_has_audio_end():
+		chart.erase("audio_end_beat")
+		chart.erase("fade_out_seconds")
+		_refresh_strip()
+		_refresh_audio_end_controls()
+		_mark_dirty()
+		_status("곡 종료 지점을 해제했어요. 음원을 원래 끝까지 재생해요.")
+		return
+	chart.audio_end_beat = _selected_response_end()
+	chart.fade_out_seconds = fade_spin.value
+	_refresh_strip()
+	_refresh_audio_end_controls()
+	_mark_dirty()
+	_status("패턴 %d 재현 끝에서 곡을 종료해요. %.1f초 동안 페이드 아웃해요." % [selected + 1, fade_spin.value])
+
+
+func _change_fade_out(value: float) -> void:
+	if _updating or not TouchChart.has_audio_end(chart):
+		return
+	_stop_preview()
+	chart.fade_out_seconds = value
+	_mark_dirty()
+	_status("곡 종료 전 %.1f초 동안 페이드 아웃해요." % value)
 
 
 func _new_chart() -> void:
@@ -535,7 +600,7 @@ func _listen(continuous: bool = false) -> void:
 	var start := maxf(0.0, TouchChart.beat_to_seconds(chart, float(phrase.show_beat) - 1.0))
 	_preview_session = RhythmSession.new(chart)
 	_prepare_preview_sounds()
-	clock.start(audio, start)
+	clock.start(audio, start, TouchChart.audio_end_seconds(chart, audio.get_length()), TouchChart.audio_fade_out_seconds(chart, audio.get_length()))
 	_update_preview(clock.seconds())
 
 

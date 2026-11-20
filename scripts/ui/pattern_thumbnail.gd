@@ -10,6 +10,7 @@ const PREVIEW_HEIGHT := HEADER_HEIGHT + GRID_HEIGHT + 4.0
 var phrase: Dictionary = {"show_beat": 0.0, "response_beat": 4.0, "length_beats": 4.0, "notes": []}
 var number := 1
 var display_start_beat := 0.0
+var ends_audio := false
 
 
 func _ready() -> void:
@@ -21,12 +22,13 @@ func _ready() -> void:
 		add_theme_stylebox_override(state, StyleBoxEmpty.new())
 
 
-func set_phrase(data: Dictionary, index: int, from_beat: float = 0.0) -> void:
+func set_phrase(data: Dictionary, index: int, from_beat: float = 0.0, marks_audio_end: bool = false) -> void:
 	phrase = data
 	number = index + 1
 	display_start_beat = from_beat
+	ends_audio = marks_audio_end
 	custom_minimum_size.x = float(phrase.length_beats) * PIXELS_PER_BEAT
-	tooltip_text = "패턴 %02d · %d노트\n시범 %s박 · 재현 %s박 · 길이 %s박" % [number, phrase.notes.size(), str(phrase.show_beat), str(phrase.response_beat), str(phrase.length_beats)]
+	tooltip_text = "패턴 %02d · %d노트%s\n시범 %s박 · 재현 %s박 · 길이 %s박" % [number, phrase.notes.size(), " · 곡 종료" if ends_audio else "", str(phrase.show_beat), str(phrase.response_beat), str(phrase.length_beats)]
 	queue_redraw()
 
 
@@ -39,7 +41,11 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 0, size.x, HEADER_HEIGHT), header_color)
 	if size.x >= 30.0:
 		draw_string(font, Vector2(8, 17), "%02d" % number, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, AppStyle.MINT if button_pressed else AppStyle.TEXT)
-	if size.x >= 80.0:
+	if ends_audio and size.x >= 74.0:
+		var end_text := "END"
+		var end_width := font.get_string_size(end_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+		draw_string(font, Vector2(size.x - 8.0 - end_width, 17), end_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, AppStyle.RED)
+	elif size.x >= 80.0:
 		var length_text := "%s박" % str(phrase.length_beats).trim_suffix(".0")
 		var text_width := font.get_string_size(length_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
 		draw_string(font, Vector2(size.x - 8.0 - text_width, 17), length_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, AppStyle.MUTED)
@@ -68,6 +74,6 @@ func _draw() -> void:
 	draw_line(Vector2(0, bottom), Vector2(size.x, bottom), AppStyle.LINE, 1.0)
 	var boundary := AppStyle.MINT if button_pressed else Color("60798b")
 	draw_line(Vector2(0.5, HEADER_HEIGHT), Vector2(0.5, bottom), boundary, 2.0 if button_pressed else 1.0)
-	draw_line(Vector2(size.x - 0.5, HEADER_HEIGHT), Vector2(size.x - 0.5, bottom), boundary, 2.0 if button_pressed else 1.0)
+	draw_line(Vector2(size.x - 0.5, HEADER_HEIGHT), Vector2(size.x - 0.5, bottom), AppStyle.RED if ends_audio else boundary, 3.0 if ends_audio else (2.0 if button_pressed else 1.0))
 	if button_pressed or has_focus():
 		draw_line(Vector2(0, 1.5), Vector2(size.x, 1.5), AppStyle.MINT if button_pressed else AppStyle.TEXT, 3.0)

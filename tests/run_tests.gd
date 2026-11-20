@@ -129,11 +129,30 @@ func _run() -> void:
 	invalid = chart.duplicate(true)
 	invalid.phrases[0].notes[0] = null
 	check(not TouchChart.validate(invalid).is_empty(), "Malformed nested notes fail cleanly")
+	var ending := chart.duplicate(true)
+	ending.audio_end_beat = float(ending.phrases[0].response_beat) + float(ending.phrases[0].length_beats)
+	ending.fade_out_seconds = 2.5
+	check(TouchChart.validate(ending).is_empty() and is_equal_approx(TouchChart.fade_out_seconds(ending), 2.5), "A phrase boundary accepts an authored ending and fade duration")
+	invalid = ending.duplicate(true)
+	invalid.audio_end_beat = float(invalid.audio_end_beat) + 0.25
+	check(not TouchChart.validate(invalid).is_empty(), "Reject an authored ending outside a response boundary")
+	invalid = ending.duplicate(true)
+	invalid.fade_out_seconds = TouchChart.MAX_FADE_OUT_SECONDS + 0.1
+	check(not TouchChart.validate(invalid).is_empty(), "Reject a fade duration outside the supported range")
+	invalid = chart.duplicate(true)
+	invalid.fade_out_seconds = 2.0
+	check(not TouchChart.validate(invalid).is_empty(), "Reject a fade duration without an authored ending")
 	var destination := "user://tests/roundtrip.json"
 	check(TouchChart.write(chart, TouchChart.SAMPLE, destination).is_empty(), "Save chart")
 	var roundtrip := TouchChart.read(destination)
 	check(str(roundtrip.error).is_empty(), "Read saved chart")
 	check(TouchChart.audio_path(roundtrip.chart, destination) == TouchChart.audio_path(chart, TouchChart.SAMPLE), "Save As preserves relative built-in audio references")
+	var ending_path := "user://tests/ending_roundtrip.json"
+	check(TouchChart.write(ending, TouchChart.SAMPLE, ending_path).is_empty(), "Save a chart with an authored audio ending")
+	var ending_roundtrip := TouchChart.read(ending_path)
+	check(str(ending_roundtrip.error).is_empty() and is_equal_approx(float(ending_roundtrip.chart.audio_end_beat), float(ending.audio_end_beat)) and is_equal_approx(float(ending_roundtrip.chart.fade_out_seconds), 2.5), "Authored ending and fade duration survive reloading")
+	var ending_track := SongLibrary.track(ending_path)
+	check(str(ending_track.error).is_empty() and is_equal_approx(float(ending_track.duration), TouchChart.beat_to_seconds(ending, float(ending.audio_end_beat))), "Song selection shows the shortened authored duration")
 	var external := chart.duplicate(true)
 	external.audio = "../audio/song.wav"
 	var source_path := "user://tests/original/source.json"
@@ -284,8 +303,13 @@ func _run() -> void:
 	var last_thumbnail := maker.pattern_strip.thumbnails[-1]
 	var strip_rect := maker.pattern_strip.get_global_rect()
 	check(maker.selected == 8 and maker.pattern_strip.thumbnails.size() == 9 and last_thumbnail.button_pressed and strip_rect.intersects(last_thumbnail.get_global_rect()), "Adding a pattern selects and reveals its thumbnail")
+	maker.fade_spin.value = 2.4
+	maker._toggle_audio_end()
+	check(is_equal_approx(float(maker.chart.audio_end_beat), maker._selected_response_end()) and is_equal_approx(float(maker.chart.fade_out_seconds), 2.4) and maker.pattern_strip.thumbnails[8].ends_audio and "✓" in maker.audio_end_button.text, "The selected pattern can mark and display the audio ending")
+	maker.fade_spin.value = 1.7
+	check(is_equal_approx(float(maker.chart.fade_out_seconds), 1.7), "Fade duration edits the active audio ending")
 	maker._delete_phrase()
-	check(maker.chart.phrases.size() == 8 and maker.pattern_strip.thumbnails.size() == 8 and maker.selected == 7 and maker.pattern_strip.thumbnails[7].button_pressed, "Deleting a pattern updates thumbnail numbering and selection")
+	check(maker.chart.phrases.size() == 8 and maker.pattern_strip.thumbnails.size() == 8 and maker.selected == 7 and maker.pattern_strip.thumbnails[7].button_pressed and not TouchChart.has_audio_end(maker.chart), "Deleting the ending pattern clears its marker and updates selection")
 	maker._select_phrase(0)
 	await process_frame
 	await process_frame
@@ -337,6 +361,15 @@ func _run() -> void:
 		{"name": "Other", "show_beat": 8.0, "response_beat": 12.0, "length_beats": 4.0, "notes": [{"beat": 0.0, "cell": 1}]}
 	]
 	maker.chart = preview_chart
+	maker._refresh()
+	maker.chart.audio_end_beat = 8.0
+	maker.chart.fade_out_seconds = 1.25
+	maker._refresh()
+	maker._listen(true)
+	check(is_equal_approx(maker.clock._audio_end_seconds, TouchChart.beat_to_seconds(preview_chart, 8.0)) and is_equal_approx(maker.clock._fade_seconds, 1.25) and maker.pattern_strip.thumbnails[0].ends_audio, "Continuous preview uses and marks the authored fade-out ending")
+	maker._stop_preview()
+	maker.chart.erase("audio_end_beat")
+	maker.chart.erase("fade_out_seconds")
 	maker._refresh()
 	maker._listen()
 	check(maker.clock.running and maker._preview_session != null, "Timing fixture starts preview playback")
@@ -476,7 +509,7 @@ func _run() -> void:
 	await process_frame
 	# Allow the native audio mixer to release its last WAV playback reference.
 	await create_timer(0.15).timeout
-	for path in [destination, relocated_path, snapshot_path, selected_path, unnamed_path, silent_audio_path, silent_chart_path, "user://tests/maker_saved.json"]:
+	for path in [destination, ending_path, relocated_path, snapshot_path, selected_path, unnamed_path, silent_audio_path, silent_chart_path, "user://tests/maker_saved.json"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("TouchPattern: %d checks, %d failures" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)

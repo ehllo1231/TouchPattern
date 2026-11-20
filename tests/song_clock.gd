@@ -47,6 +47,20 @@ func _run() -> void:
 	var restarted := clock.seconds()
 	await create_timer(0.1).timeout
 	check(restarted < 0.5 and clock.seconds() < 0.6, "Restarting from the beginning cannot retain the previous audio position")
+	clock.start(stream, 1.0, 1.5, 0.4)
+	check(is_equal_approx(clock.player.volume_db, -70.0), "A custom ending starts at the normal music volume")
+	await create_timer(0.25).timeout
+	clock.seconds()
+	check(clock.player.playing and clock.player.volume_db < -72.0, "Music volume fades down before the authored ending")
+	clock.pause()
+	var fade_pause := clock.seconds()
+	check(is_equal_approx(clock.player.volume_db, -70.0), "Pausing restores the base volume instead of retaining a faded level")
+	clock.resume()
+	await create_timer(0.12).timeout
+	check(clock.running and clock.seconds() > fade_pause and clock.player.volume_db < -70.0, "Resuming continues the same fade-out position")
+	await create_timer(0.5).timeout
+	clock.seconds()
+	check(clock.running and clock.audio_finished() and not clock.player.playing and clock.seconds() > 1.5 and is_equal_approx(clock.player.volume_db, -70.0), "An authored ending stops long audio and continues on a silent clock")
 	clock.start(stream, stream.get_length() - 0.12)
 	await create_timer(0.6).timeout
 	check(clock.running and not clock.player.playing and clock.seconds() > stream.get_length() + 0.1, "Natural audio completion preserves the final judgment grace period")

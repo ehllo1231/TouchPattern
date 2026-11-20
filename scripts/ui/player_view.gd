@@ -329,7 +329,7 @@ func _start() -> void:
 	_reset_session()
 	_last_time = _start_seconds - 0.000001
 	state = "playing"
-	clock.start(stream, _start_seconds)
+	clock.start(stream, _start_seconds, _music_end_seconds(), TouchChart.audio_fade_out_seconds(chart, stream.get_length()))
 	progress.value = clampf(_start_seconds / _run_end_seconds(), 0.0, 1.0) * 100.0
 	menu.hide()
 	input_pad.interactive = not auto_mode
@@ -387,10 +387,9 @@ func _process(_delta: float) -> void:
 	if state != "playing":
 		return
 	var time := clock.seconds()
-	# Starting a selected pattern beyond the audio cannot produce the player's
-	# natural finished signal. Treat an idle player past its duration as the
-	# same silent tail as a naturally completed stream.
-	if not _music_finished and clock.audio_finished() and time >= stream.get_length():
+	# A selected start beyond the authored ending and a fade-out cut do not emit
+	# the audio player's natural finished signal; both continue as a silent tail.
+	if not _music_finished and clock.audio_finished() and time >= _music_end_seconds():
 		_music_finished = true
 	if not _judging_finished:
 		var judge_time := time if auto_mode else time - offset_ms / 1000.0
@@ -423,7 +422,11 @@ func _run_end_seconds() -> float:
 	var judgment_end := TouchChart.beat_to_seconds(chart, session.end_beat) + RhythmSession.WINDOW
 	if not auto_mode:
 		judgment_end += offset_ms / 1000.0
-	return maxf(0.001, maxf(stream.get_length(), judgment_end))
+	return maxf(0.001, maxf(_music_end_seconds(), judgment_end))
+
+
+func _music_end_seconds() -> float:
+	return TouchChart.audio_end_seconds(chart, stream.get_length())
 
 
 func _on_music_finished() -> void:

@@ -3,6 +3,8 @@ extends RefCounted
 
 const SAMPLE := "res://assets/charts/first_echo.json"
 const VERSION := 1
+const DEFAULT_FADE_OUT_SECONDS := 3.0
+const MAX_FADE_OUT_SECONDS := 60.0
 
 
 static func read(path: String) -> Dictionary:
@@ -41,8 +43,20 @@ static func validate(data: Dictionary, require_notes: bool = true) -> String:
 		return "이번 MVP는 2×2 그리드를 지원해요."
 	if not data.get("phrases") is Array or data.phrases.is_empty():
 		return "패턴이 하나 이상 필요해요."
+	var has_audio_end := data.has("audio_end_beat")
+	var audio_end := 0.0
+	if has_audio_end:
+		if not _number(data.audio_end_beat) or float(data.audio_end_beat) < 0.0:
+			return "곡 종료 박자는 0 이상이어야 해요."
+		audio_end = float(data.audio_end_beat)
+		var fade: Variant = data.get("fade_out_seconds", DEFAULT_FADE_OUT_SECONDS)
+		if not _number(fade) or float(fade) < 0.0 or float(fade) > MAX_FADE_OUT_SECONDS:
+			return "페이드 아웃은 0~%d초 사이여야 해요." % int(MAX_FADE_OUT_SECONDS)
+	elif data.has("fade_out_seconds"):
+		return "페이드 아웃을 쓰려면 곡 종료 지점을 먼저 지정해 주세요."
 	var intervals: Array[Dictionary] = []
 	var note_count := 0
+	var audio_end_matches_phrase := false
 	for index in range(data.phrases.size()):
 		var phrase: Variant = data.phrases[index]
 		var prefix := "패턴 %d: " % (index + 1)
@@ -58,6 +72,7 @@ static func validate(data: Dictionary, require_notes: bool = true) -> String:
 			return prefix + "시범 시작은 0박 이후여야 해요."
 		if float(phrase.response_beat) < float(phrase.show_beat) + length:
 			return prefix + "재현 구간은 시범이 끝난 후에 시작해야 해요."
+		audio_end_matches_phrase = audio_end_matches_phrase or (has_audio_end and is_equal_approx(audio_end, float(phrase.response_beat) + length))
 		intervals.append({"start": float(phrase.show_beat), "end": float(phrase.show_beat) + length})
 		intervals.append({"start": float(phrase.response_beat), "end": float(phrase.response_beat) + length})
 		if not phrase.get("notes") is Array:
@@ -79,6 +94,8 @@ static func validate(data: Dictionary, require_notes: bool = true) -> String:
 			note_count += 1
 	if require_notes and note_count == 0:
 		return "노트를 하나 이상 배치해 주세요."
+	if has_audio_end and not audio_end_matches_phrase:
+		return "곡 종료 지점은 패턴의 재현 구간 끝과 맞아야 해요."
 	intervals.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.start < b.start)
 	for index in range(1, intervals.size()):
 		if float(intervals[index].start) < float(intervals[index - 1].end) - 0.000001:
@@ -99,6 +116,30 @@ static func end_beat(chart: Dictionary) -> float:
 	for phrase in chart.phrases:
 		result = maxf(result, float(phrase.response_beat) + float(phrase.length_beats))
 	return result
+
+
+static func has_audio_end(chart: Dictionary) -> bool:
+	return _number(chart.get("audio_end_beat"))
+
+
+static func audio_end_beat(chart: Dictionary) -> float:
+	return float(chart.audio_end_beat) if has_audio_end(chart) else INF
+
+
+static func fade_out_seconds(chart: Dictionary) -> float:
+	return clampf(float(chart.get("fade_out_seconds", DEFAULT_FADE_OUT_SECONDS)), 0.0, MAX_FADE_OUT_SECONDS) if has_audio_end(chart) else 0.0
+
+
+static func audio_end_seconds(chart: Dictionary, stream_length: float) -> float:
+	if not has_audio_end(chart):
+		return maxf(0.0, stream_length)
+	return clampf(beat_to_seconds(chart, audio_end_beat(chart)), 0.0, maxf(0.0, stream_length))
+
+
+static func audio_fade_out_seconds(chart: Dictionary, stream_length: float) -> float:
+	if not has_audio_end(chart) or beat_to_seconds(chart, audio_end_beat(chart)) > stream_length + 0.000001:
+		return 0.0
+	return fade_out_seconds(chart)
 
 
 static func audio_path(chart: Dictionary, chart_path: String) -> String:

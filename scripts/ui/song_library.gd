@@ -38,4 +38,4 @@ static func track(path: String = "") -> Dictionary:
 	var audio := TouchChart.load_audio(TouchChart.audio_path(chart, path))
 	if audio == null:
 		return {"path": path, "title": str(chart.title), "error": "곡의 음원을 찾을 수 없어요."}
-	return {"path": path, "title": str(chart.title), "artist": str(chart.get("artist", "")), "bpm": float(chart.bpm), "duration": audio.get_length(), "phrases": chart.phrases.size(), "error": ""}
+	return {"path": path, "title": str(chart.title), "artist": str(chart.get("artist", "")), "bpm": float(chart.bpm), "duration": TouchChart.audio_end_seconds(chart, audio.get_length()), "phrases": chart.phrases.size(), "error": ""}
