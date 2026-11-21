@@ -1,0 +1,770 @@
+{
+	"artist": "",
+	"audio": "夜明けごっこ.mp3",
+	"audio_end_beat": 241.0,
+	"bpm": 142.021,
+	"fade_out_seconds": 1.0,
+	"format_version": 1.0,
+	"grid": {
+		"columns": 2.0,
+		"rows": 2.0
+	},
+	"offset_seconds": -0.100000000000023,
+	"phrases": [
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				}
+			],
+			"response_beat": 5.0,
+			"show_beat": 1.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 0.0
+				}
+			],
+			"response_beat": 13.0,
+			"show_beat": 9.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 0.0
+				}
+			],
+			"response_beat": 21.0,
+			"show_beat": 17.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 29.0,
+			"show_beat": 25.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 1.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 37.0,
+			"show_beat": 33.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 2.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 45.0,
+			"show_beat": 41.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 1.0
+				}
+			],
+			"response_beat": 53.0,
+			"show_beat": 49.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 61.0,
+			"show_beat": 57.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 1.0
+				}
+			],
+			"response_beat": 69.0,
+			"show_beat": 65.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 3.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 77.0,
+			"show_beat": 73.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 85.0,
+			"show_beat": 81.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 0.75,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 93.0,
+			"show_beat": 89.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 3.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 3.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 1.0
+				}
+			],
+			"response_beat": 101.0,
+			"show_beat": 97.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 109.0,
+			"show_beat": 105.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 1.0
+				}
+			],
+			"response_beat": 117.0,
+			"show_beat": 113.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 125.0,
+			"show_beat": 121.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 133.0,
+			"show_beat": 129.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 141.0,
+			"show_beat": 137.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 149.0,
+			"show_beat": 145.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 0.0
+				}
+			],
+			"response_beat": 157.0,
+			"show_beat": 153.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 3.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 165.0,
+			"show_beat": 161.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 0.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 3.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 173.0,
+			"show_beat": 169.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 1.0
+				}
+			],
+			"response_beat": 181.0,
+			"show_beat": 177.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 189.0,
+			"show_beat": 185.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 197.0,
+			"show_beat": 193.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 0.75,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 205.0,
+			"show_beat": 201.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.75,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 213.0,
+			"show_beat": 209.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 3.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.5,
+					"cell": 0.0
+				}
+			],
+			"response_beat": 221.0,
+			"show_beat": 217.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.25,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 1.75,
+					"cell": 1.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 3.0
+				}
+			],
+			"response_beat": 229.0,
+			"show_beat": 225.0
+		},
+		{
+			"length_beats": 4.0,
+			"notes": [
+				{
+					"beat": 0.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 0.25,
+					"cell": 1.0
+				},
+				{
+					"beat": 0.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 0.75,
+					"cell": 1.0
+				},
+				{
+					"beat": 1.0,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.25,
+					"cell": 3.0
+				},
+				{
+					"beat": 1.5,
+					"cell": 2.0
+				},
+				{
+					"beat": 1.75,
+					"cell": 3.0
+				},
+				{
+					"beat": 2.0,
+					"cell": 0.0
+				},
+				{
+					"beat": 2.5,
+					"cell": 0.0
+				},
+				{
+					"beat": 3.0,
+					"cell": 2.0
+				}
+			],
+			"response_beat": 237.0,
+			"show_beat": 233.0
+		}
+	],
+	"title": "夜明けごっこ"
+}
