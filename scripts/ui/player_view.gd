@@ -31,12 +31,9 @@ var _start_seconds := 0.0
 var _session_start_beat := -INF
 var _visual_phase := ""
 var _visual_phrase := -1
-var _visual_cue := -1
 var _judging_finished := false
 var _music_finished := false
 var demo_pad := GameGrid.new()
-var two_beat_badge := PanelContainer.new()
-var two_beat_label := AppStyle.label("2박", 16, GameGrid.CORAL)
 var input_pad := GameGrid.new()
 var hud := GameHUD.new()
 var progress: ProgressBar
@@ -95,21 +92,6 @@ func _build_ui() -> void:
 	demo_pad.accent = GameGrid.VIOLET
 	demo_pad.mouse_default_cursor_shape = Control.CURSOR_ARROW
 	stage.add_child(demo_pad)
-	two_beat_badge.name = "TwoBeatBadge"
-	two_beat_badge.position = Vector2(415, 240)
-	two_beat_badge.size = Vector2(100, 32)
-	two_beat_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var badge_style := AppStyle.box(Color(0.16, 0.065, 0.07, 0.88), 9, Color(GameGrid.CORAL, 0.32))
-	badge_style.content_margin_left = 10
-	badge_style.content_margin_right = 10
-	badge_style.content_margin_top = 4
-	badge_style.content_margin_bottom = 4
-	two_beat_badge.add_theme_stylebox_override("panel", badge_style)
-	two_beat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	two_beat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	two_beat_badge.add_child(two_beat_label)
-	stage.add_child(two_beat_badge)
-	two_beat_badge.hide()
 	input_pad.name = "PlayerGrid"
 	input_pad.position = Vector2(140, 582)
 	input_pad.size = demo_pad.size
@@ -341,9 +323,6 @@ func _reset_session() -> void:
 	timing_readout.clear()
 	_visual_phase = ""
 	_visual_phrase = -1
-	_visual_cue = -1
-	two_beat_badge.hide()
-	demo_pad.set_preview_hint(0.0)
 	_update_stats()
 
 
@@ -461,37 +440,19 @@ func _on_music_finished() -> void:
 
 func _update_phase(time: float) -> void:
 	var phase := session.phase_at(time)
-	var cue_index := -1
-	if phase.kind != "demo":
-		var beat := TouchChart.seconds_to_beat(chart, time)
-		var next_show := INF
-		for index in range(chart.phrases.size()):
-			var phrase: Dictionary = chart.phrases[index]
-			var show_beat := float(phrase.show_beat)
-			if show_beat < session.start_beat or not is_equal_approx(float(phrase.length_beats), 2.0):
-				continue
-			if show_beat > beat and show_beat - beat <= 1.0 and show_beat < next_show:
-				cue_index = index
-				next_show = show_beat
-	_set_phase(str(phase.kind), int(phase.index), cue_index)
+	_set_phase(str(phase.kind), int(phase.index))
 
 
-func _set_phase(kind: String, phrase_index: int = -1, cue_index: int = -1) -> void:
+func _set_phase(kind: String, phrase_index: int = -1) -> void:
 	if phrase_index < 0 and kind in ["demo", "response"] and session != null:
 		phrase_index = int(session.phase_at(clock.seconds()).index)
-	if _visual_phase == kind and _visual_phrase == phrase_index and _visual_cue == cue_index:
+	if _visual_phase == kind and _visual_phrase == phrase_index:
 		return
 	_visual_phase = kind
 	_visual_phrase = phrase_index
-	_visual_cue = cue_index
 	var short_phrase: bool = phrase_index >= 0 and phrase_index < chart.phrases.size() and is_equal_approx(float(chart.phrases[phrase_index].length_beats), 2.0)
-	var short_cue := cue_index >= 0
-	var demo_accent := GameGrid.CORAL if short_phrase or short_cue else GameGrid.VIOLET
+	var demo_accent := GameGrid.CORAL if short_phrase else GameGrid.VIOLET
 	demo_pad.set_accent(demo_accent)
-	demo_pad.set_preview_hint(1.0 if short_cue else (0.45 if short_phrase and kind == "response" else 0.0))
-	two_beat_badge.visible = short_phrase or short_cue
-	two_beat_label.text = "다음 2박" if short_cue else "2박"
-	two_beat_badge.modulate.a = 0.75 if short_cue or kind == "response" else 1.0
 	demo_pad.set_active(kind == "demo")
 	input_pad.set_active(kind == "response")
 	decor.set_phase(kind, demo_accent)

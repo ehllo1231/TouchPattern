@@ -6,7 +6,6 @@ uniform float padding = 20.0;
 uniform vec4 accent : source_color = vec4(0.72, 0.52, 0.98, 1.0);
 uniform vec4 hit_color : source_color = vec4(0.72, 0.52, 0.98, 1.0);
 uniform float activation : hint_range(0.0, 1.0) = 0.0;
-uniform float preview_hint : hint_range(0.0, 1.0) = 0.0;
 uniform float flash : hint_range(0.0, 1.0) = 0.0;
 uniform bool judgment_mode = false;
 
@@ -34,9 +33,7 @@ void fragment() {
 	float inner_light = exp(-abs(d) * 0.10) * inside;
 	surface += phase_color * inner_light * activation * 0.11;
 	surface += hit_color.rgb * inner_light * flash * 0.22;
-	// The upcoming short phrase colors only the rim, without inventing a note flash.
-	float rim_emphasis = max(max(activation * 0.85, preview_hint * 0.55), feedback_weight * 0.85);
-	vec3 edge = mix(vec3(0.34, 0.33, 0.43), phase_color, rim_emphasis);
+	vec3 edge = mix(vec3(0.34, 0.33, 0.43), phase_color, max(activation * 0.85, feedback_weight * 0.85));
 	edge = mix(edge, mix(hit_color.rgb, vec3(1.0), 0.57), flash);
 	edge += vec3(0.13) * activation * (1.0 - vertical);
 	vec3 color = mix(surface, edge, rim);
