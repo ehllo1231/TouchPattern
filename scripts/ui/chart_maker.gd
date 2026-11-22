@@ -81,7 +81,7 @@ func _build_ui() -> void:
 	var edition := AppStyle.label("CHART MAKER", 13, AppStyle.MUTED)
 	edition.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(edition)
-	header.add_child(AppStyle.button("플레이어 열기 ↗", func() -> void: AppStyle.launch(chart_path)))
+	header.add_child(AppStyle.button("플레이어 열기 ↗", _open_player))
 	var toolbar := HBoxContainer.new()
 	root.add_child(toolbar)
 	toolbar.add_child(AppStyle.button("새 채보", func() -> void: _confirm_discard(_new_chart)))
@@ -496,7 +496,8 @@ func _new_chart() -> void:
 	_invalidate_bpm_search()
 	var audio := TouchChart.audio_path(chart, chart_path)
 	chart = {"format_version": 1, "title": "새 곡", "artist": "", "bpm": 112.0, "offset_seconds": 0.0, "audio": audio, "grid": {"rows": 2, "columns": 2}, "phrases": [{"show_beat": 4.0, "response_beat": 8.0, "length_beats": 4.0, "notes": []}]}
-	chart_path = "user://charts/untitled.json"
+	# A new document has no destination until the user confirms a save.
+	chart_path = ""
 	selected = 0
 	_refresh()
 	_mark_dirty()
@@ -571,18 +572,43 @@ func _exit_tree() -> void:
 		_bpm_thread.wait_to_finish()
 
 
+func _open_player() -> void:
+	if chart_path.is_empty():
+		_play_test()
+	elif AppStyle.launch(chart_path) < 0:
+		_status("플레이어 창을 열 수 없어요.", true)
+
+
 func _save() -> void:
-	if chart_path.begins_with("res://") or not FileAccess.file_exists(chart_path):
+	if chart_path.is_empty() or chart_path.begins_with("res://") or not FileAccess.file_exists(chart_path):
 		_save_as()
 	else:
 		_save_to(chart_path)
 
 
 func _save_as() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://charts"))
-	save_dialog.current_dir = ProjectSettings.globalize_path("user://charts")
-	save_dialog.current_file = str(chart.title).validate_filename() + ".json"
+	var directory := _save_directory()
+	var filename := chart_path.get_file() if not chart_path.is_empty() and not chart_path.begins_with("res://") else str(chart.title).validate_filename() + ".json"
+	# Set folder and filename together, including for the Windows native dialog.
+	save_dialog.current_path = directory.path_join(filename)
 	save_dialog.popup_centered_ratio(0.8)
+
+
+func _save_directory() -> String:
+	# Save As stays beside the current document. New charts start beside their
+	# external audio, so a song and its charts can travel together between PCs.
+	var candidates: Array[String] = []
+	if not chart_path.is_empty() and not chart_path.begins_with("res://"):
+		candidates.append(ProjectSettings.globalize_path(chart_path).get_base_dir())
+	var audio := TouchChart.audio_path(chart, chart_path)
+	if not audio.begins_with("res://"):
+		candidates.append(ProjectSettings.globalize_path(audio).get_base_dir())
+	candidates.append(ProjectSettings.globalize_path("res://Songs"))
+	candidates.append(OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS))
+	for directory in candidates:
+		if not directory.is_empty() and DirAccess.dir_exists_absolute(directory):
+			return directory
+	return OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
 
 
 func _save_to(path: String) -> void:
@@ -593,6 +619,9 @@ func _save_to(path: String) -> void:
 		_status(error, true)
 		return
 	var result := TouchChart.read(path)
+	if not str(result.error).is_empty():
+		_status("저장한 채보를 다시 열 수 없어요: " + str(result.error), true)
+		return
 	chart = result.chart
 	chart_path = path
 	dirty = false
@@ -739,8 +768,8 @@ func _mark_dirty() -> void:
 
 
 func _update_path() -> void:
-	path_label.text = ("● " if dirty else "") + chart_path
-	path_label.tooltip_text = ProjectSettings.globalize_path(chart_path)
+	path_label.text = ("● " if dirty else "") + ("아직 저장하지 않은 채보" if chart_path.is_empty() else chart_path)
+	path_label.tooltip_text = "저장을 눌러 폴더와 파일 이름을 선택해 주세요." if chart_path.is_empty() else ProjectSettings.globalize_path(chart_path)
 	DisplayServer.window_set_title("%s%s · TouchPattern Chart Maker" % ["* " if dirty else "", str(chart.get("title", ""))])
 
 
