@@ -9,8 +9,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-func set_phase(kind: String) -> void:
-	var target := GameGrid.TEAL if kind == "response" else GameGrid.VIOLET
+func set_phase(kind: String, demo_accent: Color = GameGrid.VIOLET) -> void:
+	var target := GameGrid.TEAL if kind == "response" else demo_accent
 	if _transition != null:
 		_transition.kill()
 	_transition = create_tween()

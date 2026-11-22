@@ -36,7 +36,6 @@ var _bpm_request_revision := 0
 var offset_spin := SpinBox.new()
 var audio_edit := LineEdit.new()
 var show_spin := SpinBox.new()
-var response_spin := SpinBox.new()
 var length_spin := SpinBox.new()
 var fade_spin := SpinBox.new()
 var audio_end_button: Button
@@ -149,11 +148,11 @@ func _build_ui() -> void:
 	phrase_caption.add_child(pattern_label)
 	phrase_caption.add_child(AppStyle.label("노트 편집 · 클릭해서 추가 / 제거", 11, AppStyle.MUTED))
 	_setup_spin(show_spin, 0, 10000, 0.25)
-	_setup_spin(response_spin, 0, 10000, 0.25)
 	_setup_spin(length_spin, 0.25, 32, 0.25)
 	_field(phrase_fields, "시범 시작 (박)", show_spin)
-	_field(phrase_fields, "재현 시작 (박)", response_spin)
 	_field(phrase_fields, "길이 (박)", length_spin)
+	show_spin.tooltip_text = "재현 시작은 시범 시작 + 길이로 자동 계산해요."
+	length_spin.tooltip_text = "시범과 재현에 각각 적용되는 길이예요. 재현은 시범이 끝나면 바로 시작해요."
 	_setup_spin(fade_spin, 0, TouchChart.MAX_FADE_OUT_SECONDS, 0.1)
 	fade_spin.suffix = " 초"
 	fade_spin.value = TouchChart.DEFAULT_FADE_OUT_SECONDS
@@ -163,7 +162,6 @@ func _build_ui() -> void:
 	_field(phrase_fields, "음원 종료", audio_end_button)
 	audio_end_button.custom_minimum_size.x = 142
 	show_spin.value_changed.connect(func(value: float) -> void: _change_phrase("show_beat", value))
-	response_spin.value_changed.connect(func(value: float) -> void: _change_phrase("response_beat", value))
 	length_spin.value_changed.connect(_change_length)
 	fade_spin.value_changed.connect(_change_fade_out)
 	var snap := OptionButton.new()
@@ -366,7 +364,6 @@ func _display_phrase(index: int) -> void:
 	var phrase: Dictionary = chart.phrases[selected]
 	_updating = true
 	show_spin.value = float(phrase.show_beat)
-	response_spin.value = float(phrase.response_beat)
 	length_spin.value = float(phrase.length_beats)
 	_refresh_audio_end_controls()
 	_updating = false
@@ -381,6 +378,8 @@ func _change_phrase(key: String, value: Variant) -> void:
 	_stop_preview()
 	var moves_audio_end := _selected_has_audio_end()
 	chart.phrases[selected][key] = value
+	var phrase: Dictionary = chart.phrases[selected]
+	phrase.response_beat = float(phrase.show_beat) + float(phrase.length_beats)
 	if moves_audio_end:
 		chart.audio_end_beat = _selected_response_end()
 	_refresh_strip()

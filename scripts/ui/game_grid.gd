@@ -3,6 +3,7 @@ extends GridPad
 
 const TILE_SHADER = preload("res://scripts/ui/game_tile.gdshader")
 const VIOLET := Color("bb92f5")
+const CORAL := Color("f47668")
 const TEAL := Color("65eee0")
 const STRENGTH := {"PERFECT": 1.0, "GOOD": 0.67, "OK": 0.43, "MISS": 0.32}
 
@@ -17,6 +18,7 @@ var _hit_colors: Array[Color] = [VIOLET, VIOLET, VIOLET, VIOLET]
 var _judgment_mode: Array[bool] = [false, false, false, false]
 var _decay := PackedFloat32Array([3.5, 3.5, 3.5, 3.5])
 var _activation := 0.0
+var preview_hint := 0.0
 
 
 func _ready() -> void:
@@ -65,6 +67,25 @@ func set_active(value: bool) -> void:
 	set_process(true)
 
 
+func set_accent(value: Color) -> void:
+	if accent == value:
+		return
+	accent = value
+	for cell in range(4):
+		# Let any previous note finish in its original color.
+		if is_zero_approx(_glow[cell]) and not _judgment_mode[cell]:
+			_hit_colors[cell] = accent
+	_update_materials()
+
+
+func set_preview_hint(value: float) -> void:
+	value = clampf(value, 0.0, 1.0)
+	if is_equal_approx(preview_hint, value):
+		return
+	preview_hint = value
+	_update_materials()
+
+
 func flash(cell: int, failed: bool = false, strength: float = 1.0) -> void:
 	if cell < 0 or cell > 3:
 		return
@@ -109,6 +130,8 @@ func _process(delta: float) -> void:
 func _update_materials() -> void:
 	for cell in range(_tiles.size()):
 		var shader_material := _tiles[cell].material as ShaderMaterial
+		shader_material.set_shader_parameter("accent", accent)
+		shader_material.set_shader_parameter("preview_hint", preview_hint)
 		shader_material.set_shader_parameter("activation", _activation)
 		shader_material.set_shader_parameter("flash", _glow[cell])
 		shader_material.set_shader_parameter("hit_color", _hit_colors[cell])

@@ -62,11 +62,11 @@ func update_stats(session: RhythmSession) -> void:
 	combo_label.text = str(session.combo)
 
 
-func set_phase(kind: String) -> void:
+func set_phase(kind: String, demo_accent: Color = GameGrid.VIOLET) -> void:
 	if _transition != null:
 		_transition.kill()
 	_transition = create_tween()
-	_transition.tween_method(_set_accent, accent, GameGrid.TEAL if kind == "response" else GameGrid.VIOLET, 0.16)
+	_transition.tween_method(_set_accent, accent, GameGrid.TEAL if kind == "response" else demo_accent, 0.16)
 
 
 func _set_accent(value: Color) -> void:

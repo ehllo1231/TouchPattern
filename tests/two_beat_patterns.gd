@@ -1,0 +1,161 @@
+extends SceneTree
+
+var checks := 0
+var failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+
+func check(condition: bool, description: String) -> void:
+	checks += 1
+	if not condition:
+		failures.append(description)
+		push_error("FAIL: " + description)
+
+
+func at_beat(player: PlayerView, beat: float) -> void:
+	player.clock._paused_seconds = TouchChart.beat_to_seconds(player.chart, beat)
+	player._process(0.0)
+
+
+func mixed_chart() -> Dictionary:
+	var chart: Dictionary = TouchChart.read(TouchChart.SAMPLE).chart.duplicate(true)
+	chart.title = "Four and Two Beats"
+	chart.audio = TouchChart.audio_path(chart, TouchChart.SAMPLE)
+	chart.bpm = 120.0
+	chart.offset_seconds = 0.125
+	chart.phrases = [
+		{"show_beat": 4.0, "response_beat": 8.0, "length_beats": 4.0, "notes": [{"beat": 0.0, "cell": 0}, {"beat": 3.0, "cell": 3}]},
+		{"show_beat": 12.0, "response_beat": 14.0, "length_beats": 2.0, "notes": [{"beat": 0.0, "cell": 1}, {"beat": 1.5, "cell": 3}]},
+		{"show_beat": 16.0, "response_beat": 18.0, "length_beats": 2.0, "notes": [{"beat": 0.0, "cell": 2}, {"beat": 0.75, "cell": 0}]},
+		{"show_beat": 20.0, "response_beat": 24.0, "length_beats": 4.0, "notes": [{"beat": 0.0, "cell": 0}, {"beat": 3.0, "cell": 3}]}
+	]
+	return chart
+
+
+func _run() -> void:
+	root.size = Vector2i(540, 960)
+	var chart := mixed_chart()
+	check(TouchChart.validate(chart).is_empty(), "A song can mix four-beat and two-beat phrases")
+	var session := RhythmSession.new(chart)
+	for example in [[12.0, "demo", 1], [13.999, "demo", 1], [14.0, "response", 1], [16.0, "demo", 2], [18.0, "response", 2], [20.0, "demo", 3]]:
+		var phase := session.phase_at(TouchChart.beat_to_seconds(chart, float(example[0])))
+		check(phase.kind == example[1] and phase.index == example[2], "Mixed pattern boundary at beat %s has the correct phase" % str(example[0]))
+	var judge := RhythmSession.new(chart)
+	var first_two := TouchChart.beat_to_seconds(chart, 14.0)
+	check(judge.hit(1, first_two - RhythmSession.WINDOW) == "OK", "A two-beat pattern retains the original early judgment window")
+	var auto_session := RhythmSession.new(chart)
+	auto_session.auto_play(1000.0)
+	check(auto_session.counts.PERFECT == 8 and auto_session.counts.MISS == 0 and auto_session.score == 8000, "Mixed-length patterns retain the same scoring and AUTO timing")
+	var fixture_path := "user://tests/two_beat_%d.json" % OS.get_process_id()
+	check(TouchChart.write(chart, TouchChart.SAMPLE, fixture_path).is_empty(), "The mixed chart saves using the existing format")
+	var player := PlayerView.new()
+	player.theme = AppStyle.make_theme()
+	player.preferences_path = "user://tests/two_beat_preferences.cfg"
+	player.initial_path = fixture_path
+	root.add_child(player)
+	player.size = Vector2(540, 960)
+	await process_frame
+	player._start()
+	player.set_process(false)
+	player.clock.pause()
+	at_beat(player, 10.999)
+	check(player.demo_pad.accent == GameGrid.VIOLET and not player.two_beat_badge.visible, "A four-beat response stays purple/teal until the one-beat cue")
+	player.demo_pad.clear()
+	at_beat(player, 11.0)
+	check(player.two_beat_badge.visible and player.two_beat_label.text == "다음 2박", "A two-beat demonstration is announced exactly one beat early")
+	check(player.demo_pad.accent == GameGrid.CORAL and player.demo_pad.preview_hint == 1.0 and player.demo_pad._glow.count(0.0) == 4, "The cue colors the rim without flashing any note")
+	check(player.input_pad.accent == GameGrid.TEAL and player.input_pad.emphasis and not player.demo_pad.emphasis, "The cue leaves the current response grid active and teal")
+	check(player.two_beat_badge.mouse_filter == Control.MOUSE_FILTER_IGNORE and player.two_beat_label.mouse_filter == Control.MOUSE_FILTER_IGNORE, "The new badge never consumes touches")
+	at_beat(player, 12.0)
+	check(player.demo_pad.accent == GameGrid.CORAL and player.demo_pad._hit_colors[1] == GameGrid.CORAL and player.demo_pad._glow[1] == 1.0, "The first two-beat note flashes red immediately at the boundary")
+	check(player.demo_pad.emphasis and not player.input_pad.emphasis and player.two_beat_label.text == "2박", "Two-beat demonstrations activate only the upper grid and show their length")
+	var material := player.demo_pad._tiles[0].material as ShaderMaterial
+	check(material.get_shader_parameter("accent") == GameGrid.CORAL and is_zero_approx(float(material.get_shader_parameter("preview_hint"))), "Runtime phrase color reaches the actual tile shader")
+	await player.hud._transition.finished
+	check(player.hud.accent.is_equal_approx(GameGrid.CORAL) and player.decor.accent.is_equal_approx(GameGrid.CORAL), "The demonstration HUD and stage accents follow the red phrase")
+	at_beat(player, 14.0)
+	check(player.input_pad.accent == GameGrid.TEAL and player.input_pad.emphasis and not player.demo_pad.emphasis, "A two-beat response uses the same teal input grid")
+	check(player.demo_pad.accent == GameGrid.CORAL and player.demo_pad.preview_hint > 0.0 and player.two_beat_badge.visible, "The upper rim and badge retain the two-beat context during response")
+	var before_score := player.session.score
+	player._press(1)
+	check(player.session.score == before_score + 1000 and player.input_pad.feedback.kinds[1] == "PERFECT", "Actual manual input scores normally in a two-beat response")
+	await player.hud._transition.finished
+	check(player.hud.accent.is_equal_approx(GameGrid.TEAL) and player.decor.accent.is_equal_approx(GameGrid.TEAL), "Response HUD and decorations remain teal")
+	at_beat(player, 15.0)
+	check(player.two_beat_label.text == "다음 2박" and player.input_pad.emphasis, "Consecutive two-beat phrases announce their next turn during the current response")
+	at_beat(player, 16.0)
+	check(player.demo_pad._hit_colors[2] == GameGrid.CORAL and player.demo_pad._glow[2] == 1.0, "The next two-beat phrase starts without a gap or tempo change")
+	player._pause()
+	var paused_time := player.clock.seconds()
+	var paused_label := player.two_beat_label.text
+	player.demo_pad._process(1.0)
+	check(player.clock.seconds() == paused_time and player.two_beat_label.text == paused_label and player.demo_pad._glow[2] == 1.0, "Pausing freezes two-beat notes and their displayed context")
+	player._toggle()
+	player.clock.pause()
+	at_beat(player, 20.0)
+	check(player.demo_pad.accent == GameGrid.VIOLET and player.demo_pad._hit_colors[0] == GameGrid.VIOLET and not player.two_beat_badge.visible and is_zero_approx(player.demo_pad.preview_hint), "Returning to four beats restores purple and removes all short-phrase cues")
+	player._set_phase("demo", 1)
+	player._set_phase("demo", 0)
+	check(player.demo_pad.accent == GameGrid.VIOLET, "A phrase change updates color even if the phase kind stays demo")
+	player._start()
+	player.clock.pause()
+	check(player.demo_pad.accent == GameGrid.VIOLET and not player.two_beat_badge.visible and player.session.score == 0, "Restart resets short-phrase visuals along with the score")
+	player._load_chart(fixture_path, 1)
+	player._start()
+	player.clock.pause()
+	check(player.two_beat_label.text == "다음 2박" and player.two_beat_badge.visible and player.session.notes.size() == 6 and player.session.counts.MISS == 0 and player.demo_pad._glow.count(0.0) == 4, "Selected-pattern testing begins with the red cue and excludes earlier notes")
+	for dimensions in [Vector2(320, 568), Vector2(390, 844), Vector2(540, 960), Vector2(1100, 900)]:
+		player.size = dimensions
+		await process_frame
+		check(Rect2(Vector2.ZERO, dimensions).encloses(player.two_beat_badge.get_global_rect()), "The two-beat badge fits %dx%d" % [dimensions.x, dimensions.y])
+		check(not player.two_beat_badge.get_global_rect().intersects(player.timing_readout.get_global_rect()), "The badge leaves detailed judgment timing clear at %dx%d" % [dimensions.x, dimensions.y])
+	player.auto_mode = true
+	player._start()
+	player.clock.pause()
+	for beat in [12.0, 14.0, 15.5, 16.0, 18.0, 18.75, 20.0, 24.0, 27.0]:
+		at_beat(player, beat)
+	check(player.session.counts.PERFECT == 6 and player.session.counts.MISS == 0 and not player.input_pad.interactive, "AUTO plays all remaining mixed-length notes with the original timing")
+	player.queue_free()
+	await process_frame
+	var maker := ChartMaker.new()
+	maker.theme = AppStyle.make_theme()
+	root.add_child(maker)
+	await process_frame
+	check(not maker.get_property_list().any(func(property: Dictionary) -> bool: return property.name == "response_spin"), "The maker no longer exposes a separate response-start input")
+	maker._new_chart()
+	maker._toggle_note(0.0, 1)
+	maker.length_spin.value = 2.0
+	check(is_equal_approx(float(maker.chart.phrases[0].response_beat), 6.0), "Setting length to two beats derives response start from show start plus length")
+	maker.show_spin.value = 10.0
+	check(is_equal_approx(float(maker.chart.phrases[0].response_beat), 12.0), "Editing demonstration start automatically moves response start")
+	maker._listen()
+	check(maker.clock.running and is_equal_approx(maker._preview_end, TouchChart.beat_to_seconds(maker.chart, 14.0)), "Preview uses the derived two-beat response and its end")
+	maker._stop_preview()
+	maker._toggle_audio_end()
+	check(is_equal_approx(float(maker.chart.audio_end_beat), 14.0), "The authored audio ending uses the derived response end")
+	maker.length_spin.value = 3.0
+	check(is_equal_approx(float(maker.chart.phrases[0].response_beat), 13.0) and is_equal_approx(float(maker.chart.audio_end_beat), 16.0), "Length edits move response start and the selected audio-ending marker together")
+	maker.show_spin.value = 12.0
+	check(is_equal_approx(float(maker.chart.phrases[0].response_beat), 15.0) and is_equal_approx(float(maker.chart.audio_end_beat), 18.0), "Start edits keep the audio ending attached to the same pattern")
+	maker._toggle_note(2.5, 3)
+	maker.length_spin.value = 2.0
+	check(is_equal_approx(float(maker.chart.phrases[0].length_beats), 3.0) and is_equal_approx(float(maker.chart.phrases[0].response_beat), 15.0) and is_equal_approx(float(maker.chart.audio_end_beat), 18.0), "Rejected shortening preserves notes, derived response, and the audio ending")
+	maker._toggle_note(2.5, 3)
+	maker.length_spin.value = 2.0
+	check(is_equal_approx(float(maker.chart.phrases[0].response_beat), 14.0) and is_equal_approx(float(maker.chart.audio_end_beat), 16.0), "Shortening succeeds after removing the out-of-range note")
+	var saved_path := "user://tests/two_beat_maker_%d.json" % OS.get_process_id()
+	maker._save_to(saved_path)
+	var saved := TouchChart.read(saved_path)
+	check(str(saved.error).is_empty() and is_equal_approx(float(saved.chart.phrases[0].response_beat), float(saved.chart.phrases[0].show_beat) + float(saved.chart.phrases[0].length_beats)), "Derived response start survives saving and reloading in the existing chart format")
+	maker._add_phrase()
+	check(is_equal_approx(float(maker.chart.phrases[1].show_beat), 16.0) and is_equal_approx(float(maker.chart.phrases[1].response_beat), 20.0), "Adding a pattern starts after the derived previous response end")
+	maker.queue_free()
+	await process_frame
+	await create_timer(0.15).timeout
+	for path in [fixture_path, saved_path]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	print("Two-beat patterns: %d checks, %d failures" % [checks, failures.size()])
+	quit(0 if failures.is_empty() else 1)
