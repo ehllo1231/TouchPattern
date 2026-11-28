@@ -65,32 +65,47 @@ func _run() -> void:
 	editor.screen_select.select(2)
 	editor.screen_select.item_selected.emit(2)
 	var warning := editor.player_preview.transition_warning
-	check(editor.is_processing() and warning.visible and editor.player_preview.input_pad.emphasis, "Transition screen opens with the live warning already playing")
+	check(not editor.is_processing() and not warning.visible and not editor.preview_play_button.disabled, "Opening the transition screen waits for Play")
 	editor.size_sliders.warning_size.value = 64
 	editor.size_spins.warning_flicker_beats.value = 0.5
 	editor.size_spins.warning_flicker_percent.value = 50
-	check(editor.unsaved and warning.size.x == 64 and is_equal_approx(warning.self_modulate.a, 0.5), "Editing the glyph restarts its animation with the new size and depth")
 	editor.preview_bpm.value = 60
+	check(editor.unsaved and warning.size.x == 64 and not editor.is_processing() and not warning.visible, "Editing the glyph or tempo does not start a preview")
+	editor.preview_play_button.pressed.emit()
+	check(editor.is_processing() and editor.preview_play_button.disabled and warning.visible and is_equal_approx(warning.self_modulate.a, 0.5), "Play starts a single preview using the edited depth")
 	editor._process(0.5)
 	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "At the preview BPM the orange warning locks at the configured half beat")
+	editor.size_sliders.warning_size.value = 63
+	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
+	editor.size_sliders.warning_size.value = 64
 	editor._process(1.5)
 	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
-	editor._process(1.0)
-	check(warning.visible and editor.player_preview.input_pad.emphasis, "The preview loops back to the next warning")
+	editor._process(1.25)
+	await process_frame
+	await process_frame
+	check(not editor.is_processing() and not editor.preview_play_button.disabled and not warning.visible and editor.preview_beat == 3.0, "Playback stops on the final demo even when the frame passes the end")
+	editor.preview_play_button.pressed.emit()
+	check(editor.is_processing() and editor.preview_beat == 0.0 and warning.visible, "A second press starts again from the first warning beat")
 	editor.direction_select.select(1)
 	editor.direction_select.item_selected.emit(1)
+	check(not editor.is_processing() and not warning.visible and not editor.preview_play_button.disabled, "Changing direction during playback returns to ready")
+	editor.preview_play_button.pressed.emit()
 	editor._process(0.75)
 	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET) and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Reverse preview shows a violet warning during the short pattern's response")
 	editor._save()
 	player._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
 	check(player.transition_warning.size.x == 64 and player.transition_warning.flicker_beats == 0.5 and player.transition_warning.flicker_depth == 0.5, "Saved editor animation settings also reach a running game")
 	editor.size_sliders.warning_flicker_beats.value = 0
-	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length leaves a steady warning from onset")
+	editor._process(3.0)
+	editor.preview_play_button.pressed.emit()
+	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length leaves a steady warning from onset on replay")
+	editor._process(3.0)
 	editor.reset_button.pressed.emit()
-	check(warning.size.x == 48.0 and editor.layout.play_grid_size == 320, "Reset on the transition screen restores only its settings")
+	check(warning.size.x == 48.0 and editor.layout.play_grid_size == 320 and not editor.is_processing(), "Reset restores the transition settings without starting playback")
+	editor.preview_play_button.pressed.emit()
 	editor.screen_select.select(0)
 	editor.screen_select.item_selected.emit(0)
-	check(not editor.is_processing() and not warning.visible and editor.player_preview.demo_pad.accent == GameGrid.VIOLET, "Leaving the transition stops the loop and restores the ordinary grid preview")
+	check(not editor.is_processing() and not warning.visible and editor.player_preview.demo_pad.accent == GameGrid.VIOLET, "Leaving the transition screen mid-playback restores the ordinary grid preview")
 	player.show()
 	for dimensions in [Vector2(320, 568), Vector2(360, 800), Vector2(390, 844), Vector2(540, 960), Vector2(768, 1024), Vector2(1100, 900), Vector2(960, 540)]:
 		player.size = dimensions

@@ -16,6 +16,7 @@ var game_settings := VBoxContainer.new()
 var transition_settings := VBoxContainer.new()
 var direction_select := OptionButton.new()
 var preview_bpm := SpinBox.new()
+var preview_play_button: Button
 var preview_beat_label := AppStyle.label("", 13, AppStyle.MUTED)
 var preview_beat := 0.0
 var preview_start_beat := 0.0
@@ -117,7 +118,7 @@ func _build_ui() -> void:
 	direction_select.add_item("4박 → 2박")
 	direction_select.add_item("2박 → 4박")
 	direction_select.custom_minimum_size.y = 40
-	direction_select.item_selected.connect(func(_index: int) -> void: _start_transition_preview())
+	direction_select.item_selected.connect(func(_index: int) -> void: _prepare_transition_preview())
 	toolbar.add_child(direction_select)
 	for dimensions in PREVIEW_SIZES:
 		size_select.add_item("%d × %d" % [dimensions.x, dimensions.y])
@@ -157,9 +158,9 @@ func _build_transition_settings() -> void:
 	preview_bpm.max_value = 300
 	preview_bpm.value = 120
 	preview_bpm.custom_minimum_size = Vector2(116, 38)
-	preview_bpm.value_changed.connect(func(_value: float) -> void: _start_transition_preview())
 	row.add_child(preview_bpm)
-	transition_settings.add_child(AppStyle.button("처음부터 재생", _start_transition_preview))
+	preview_play_button = AppStyle.button("재생", _start_transition_preview)
+	transition_settings.add_child(preview_play_button)
 	transition_settings.add_child(preview_beat_label)
 
 
@@ -233,9 +234,9 @@ func _show_screen(index: int) -> void:
 	phase_select.visible = index == 0
 	player_preview.visible = index != 1
 	title_preview.visible = index == 1
-	set_process(index == 2)
+	set_process(false)
 	if index == 2:
-		_start_transition_preview()
+		_prepare_transition_preview()
 	else:
 		player_preview.session = null
 		player_preview.transition_warning.hide()
@@ -252,9 +253,26 @@ func _show_phase(index: int) -> void:
 	player_preview.decor.set_phase(phase)
 
 
+func _prepare_transition_preview() -> void:
+	set_process(false)
+	preview_play_button.disabled = false
+	preview_beat_label.text = "재생 대기"
+	preview_beat = 0.0
+	player_preview.session = null
+	player_preview.transition_warning.hide()
+	player_preview.demo_pad.clear()
+	_show_phase(1)
+	player_preview.demo_pad.set_accent(GameGrid.VIOLET if direction_select.selected == 0 else GameGrid.CORAL)
+
+
 func _start_transition_preview() -> void:
 	if not transition_settings.visible:
 		return
+	for spin in size_spins.values():
+		if spin.get_line_edit().has_focus():
+			spin.apply()
+	if preview_bpm.get_line_edit().has_focus():
+		preview_bpm.apply()
 	var current := 4 if direction_select.selected == 0 else 2
 	var upcoming := 2 if current == 4 else 4
 	var boundary := current * 2
@@ -265,20 +283,21 @@ func _start_transition_preview() -> void:
 	player_preview.session = RhythmSession.new(example)
 	player_preview._set_phase("wait")
 	preview_start_beat = boundary - TransitionWarning.LEAD_BEATS
-	_restart_preview_cycle()
-
-
-func _restart_preview_cycle() -> void:
 	preview_beat = 0.0
 	player_preview.demo_pad.clear()
+	preview_play_button.disabled = true
+	set_process(true)
 	_render_transition()
 
 
 func _process(delta: float) -> void:
-	# Include the next demonstration's downbeat in each silent preview loop.
-	var cycle := TransitionWarning.LEAD_BEATS + 1.0
-	preview_beat = fmod(preview_beat + delta * preview_bpm.value / 60.0, cycle)
+	var end_beat := TransitionWarning.LEAD_BEATS + 1.0
+	preview_beat = minf(preview_beat + delta * preview_bpm.value / 60.0, end_beat)
 	_render_transition()
+	if preview_beat >= end_beat:
+		set_process(false)
+		preview_play_button.disabled = false
+		preview_beat_label.text = "재생 완료"
 
 
 func _render_transition() -> void:
@@ -295,8 +314,6 @@ func _change_setting(value: float, key: String) -> void:
 	layout.set(key, value)
 	_sync_controls()
 	player_preview.apply_gui_layout(layout)
-	if transition_settings.visible:
-		_restart_preview_cycle()
 	_refresh_dirty()
 
 
@@ -344,8 +361,6 @@ func _reset() -> void:
 			layout.set(key, defaults.get(key))
 	_sync_controls()
 	player_preview.apply_gui_layout(layout)
-	if transition_settings.visible:
-		_restart_preview_cycle()
 	_refresh_dirty()
 
 
