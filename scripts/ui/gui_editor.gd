@@ -6,13 +6,19 @@ const PREVIEW_SIZES := [Vector2i(540, 960), Vector2i(390, 844), Vector2i(768, 10
 var layout_path := GuiLayout.PATH
 var layout: GuiLayout
 var unsaved := false
-var saved_sizes := Vector2.ZERO
+var saved_values: Dictionary
 var size_sliders: Dictionary = {}
 var size_spins: Dictionary = {}
 var screen_select := OptionButton.new()
 var size_select := OptionButton.new()
 var phase_select := OptionButton.new()
 var game_settings := VBoxContainer.new()
+var transition_settings := VBoxContainer.new()
+var direction_select := OptionButton.new()
+var preview_bpm := SpinBox.new()
+var preview_beat_label := AppStyle.label("", 13, AppStyle.MUTED)
+var preview_beat := 0.0
+var preview_start_beat := 0.0
 var title_hint: Label
 var status := AppStyle.label("", 13, AppStyle.MUTED)
 var save_button: Button
@@ -27,8 +33,8 @@ var title_preview := FrontMenu.new()
 func _ready() -> void:
 	theme = AppStyle.make_theme()
 	layout = GuiLayout.read(layout_path)
-	saved_sizes = _sizes()
 	_build_ui()
+	saved_values = _values()
 	_build_preview()
 	_sync_controls()
 	_show_screen(0)
@@ -80,17 +86,20 @@ func _build_ui() -> void:
 	inspector.add_child(AppStyle.label("편집할 화면", 13, AppStyle.MUTED))
 	screen_select.add_item("게임 화면")
 	screen_select.add_item("시작 화면")
+	screen_select.add_item("전환 화면")
 	screen_select.custom_minimum_size.y = 44
 	screen_select.item_selected.connect(_show_screen)
 	inspector.add_child(screen_select)
 	inspector.add_child(HSeparator.new())
 	game_settings.add_theme_constant_override("separation", 24)
 	inspector.add_child(game_settings)
-	_add_size_control("demo", "시범 그리드", GameGrid.VIOLET)
-	_add_size_control("play", "플레이 그리드", GameGrid.TEAL)
+	_add_control(game_settings, "demo_grid_size", "시범 그리드", GameGrid.VIOLET, GuiLayout.MIN_GRID_SIZE, GuiLayout.MAX_GRID_SIZE, 1, "px")
+	_add_control(game_settings, "play_grid_size", "플레이 그리드", GameGrid.TEAL, GuiLayout.MIN_GRID_SIZE, GuiLayout.MAX_GRID_SIZE, 1, "px")
 	game_settings.add_child(_hint("2×2 그리드의 한 변 길이를 조절합니다.\n중심 위치는 유지됩니다.\n\n기준 화면: 540 × 960\n기본 크기: 260 × 260"))
-	title_hint = _hint("시작 화면 미리보기\n\n이번 버전에서는 게임 화면의\n그리드 크기를 편집할 수 있습니다.")
+	title_hint = _hint("시작 화면 미리보기")
 	inspector.add_child(title_hint)
+	inspector.add_child(transition_settings)
+	_build_transition_settings()
 	var preview_column := VBoxContainer.new()
 	preview_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(preview_column)
@@ -105,6 +114,11 @@ func _build_ui() -> void:
 	phase_select.custom_minimum_size.y = 40
 	phase_select.item_selected.connect(_show_phase)
 	toolbar.add_child(phase_select)
+	direction_select.add_item("4박 → 2박")
+	direction_select.add_item("2박 → 4박")
+	direction_select.custom_minimum_size.y = 40
+	direction_select.item_selected.connect(func(_index: int) -> void: _start_transition_preview())
+	toolbar.add_child(direction_select)
 	for dimensions in PREVIEW_SIZES:
 		size_select.add_item("%d × %d" % [dimensions.x, dimensions.y])
 	size_select.custom_minimum_size.y = 40
@@ -129,34 +143,53 @@ func _hint(text: String) -> Label:
 	return label
 
 
-func _add_size_control(key: String, caption: String, accent: Color) -> void:
+func _build_transition_settings() -> void:
+	_add_control(transition_settings, "warning_size", "느낌표 크기", AppStyle.TEXT, 24, 64, 1, "px")
+	_add_control(transition_settings, "warning_flicker_beats", "깜빡임 길이", AppStyle.TEXT, 0, 1, 0.05, "박")
+	_add_control(transition_settings, "warning_flicker_percent", "깜빡임 강도", AppStyle.TEXT, 0, 100, 1, "%")
+	transition_settings.add_child(HSeparator.new())
+	var row := HBoxContainer.new()
+	transition_settings.add_child(row)
+	var label := AppStyle.label("미리보기 BPM", 14)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	preview_bpm.min_value = 30
+	preview_bpm.max_value = 300
+	preview_bpm.value = 120
+	preview_bpm.custom_minimum_size = Vector2(116, 38)
+	preview_bpm.value_changed.connect(func(_value: float) -> void: _start_transition_preview())
+	row.add_child(preview_bpm)
+	transition_settings.add_child(AppStyle.button("처음부터 재생", _start_transition_preview))
+	transition_settings.add_child(preview_beat_label)
+
+
+func _add_control(parent: VBoxContainer, key: String, caption: String, accent: Color, minimum: float, maximum: float, increment: float, unit: String) -> void:
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 12)
-	game_settings.add_child(column)
-	column.add_child(AppStyle.label(caption, 18, accent))
+	column.add_theme_constant_override("separation", 8)
+	parent.add_child(column)
 	var row := HBoxContainer.new()
 	column.add_child(row)
-	var label := AppStyle.label("한 변", 13, AppStyle.MUTED)
+	var label := AppStyle.label(caption, 16, accent)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(label)
 	var spin := SpinBox.new()
-	spin.min_value = GuiLayout.MIN_GRID_SIZE
-	spin.max_value = GuiLayout.MAX_GRID_SIZE
-	spin.step = 1
-	spin.suffix = " px"
-	spin.custom_minimum_size = Vector2(148, 42)
+	spin.min_value = minimum
+	spin.max_value = maximum
+	spin.step = increment
+	spin.suffix = unit
+	spin.custom_minimum_size = Vector2(120, 40)
 	row.add_child(spin)
 	var slider := HSlider.new()
-	slider.min_value = GuiLayout.MIN_GRID_SIZE
-	slider.max_value = GuiLayout.MAX_GRID_SIZE
-	slider.step = 1
+	slider.min_value = minimum
+	slider.max_value = maximum
+	slider.step = increment
 	slider.custom_minimum_size.y = 32
 	column.add_child(slider)
 	size_sliders[key] = slider
 	size_spins[key] = spin
-	spin.value_changed.connect(_set_grid_size.bind(key))
-	slider.value_changed.connect(_set_grid_size.bind(key))
+	spin.value_changed.connect(_change_setting.bind(key))
+	slider.value_changed.connect(_change_setting.bind(key))
 
 
 func _build_preview() -> void:
@@ -179,7 +212,6 @@ func _build_preview() -> void:
 	title_preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	title_preview.set_process_unhandled_key_input(false)
 	_layout_preview()
-	_show_phase(0)
 
 
 func _layout_preview() -> void:
@@ -196,12 +228,23 @@ func _layout_preview() -> void:
 func _show_screen(index: int) -> void:
 	game_settings.visible = index == 0
 	title_hint.visible = index == 1
+	transition_settings.visible = index == 2
+	direction_select.visible = index == 2
 	phase_select.visible = index == 0
-	player_preview.visible = index == 0
+	player_preview.visible = index != 1
 	title_preview.visible = index == 1
+	set_process(index == 2)
+	if index == 2:
+		_start_transition_preview()
+	else:
+		player_preview.session = null
+		player_preview.transition_warning.hide()
+		player_preview.demo_pad.clear()
+		_show_phase(phase_select.selected)
 
 
 func _show_phase(index: int) -> void:
+	player_preview.demo_pad.set_accent(GameGrid.VIOLET)
 	player_preview.demo_pad.set_active(index == 0)
 	player_preview.input_pad.set_active(index == 1)
 	var phase := "demo" if index == 0 else "response"
@@ -209,28 +252,72 @@ func _show_phase(index: int) -> void:
 	player_preview.decor.set_phase(phase)
 
 
-func _set_grid_size(value: float, key: String) -> void:
-	layout.set(key + "_grid_size", value)
+func _start_transition_preview() -> void:
+	if not transition_settings.visible:
+		return
+	var current := 4 if direction_select.selected == 0 else 2
+	var upcoming := 2 if current == 4 else 4
+	var boundary := current * 2
+	var example := {"bpm": preview_bpm.value, "offset_seconds": 0.0, "phrases": [
+		{"show_beat": 0, "response_beat": current, "length_beats": current, "notes": []},
+		{"show_beat": boundary, "response_beat": boundary + upcoming, "length_beats": upcoming, "notes": []}
+	]}
+	player_preview.session = RhythmSession.new(example)
+	player_preview._set_phase("wait")
+	preview_start_beat = boundary - TransitionWarning.LEAD_BEATS
+	_restart_preview_cycle()
+
+
+func _restart_preview_cycle() -> void:
+	preview_beat = 0.0
+	player_preview.demo_pad.clear()
+	_render_transition()
+
+
+func _process(delta: float) -> void:
+	# Include the next demonstration's downbeat in each silent preview loop.
+	var cycle := TransitionWarning.LEAD_BEATS + 1.0
+	preview_beat = fmod(preview_beat + delta * preview_bpm.value / 60.0, cycle)
+	_render_transition()
+
+
+func _render_transition() -> void:
+	var was_demo := player_preview.demo_pad.emphasis
+	var time := TouchChart.beat_to_seconds(player_preview.session.chart, preview_start_beat + preview_beat)
+	player_preview._update_phase(time)
+	if player_preview.demo_pad.emphasis and not was_demo:
+		player_preview.demo_pad.flash(0)
+	var left := ceili(TransitionWarning.LEAD_BEATS - preview_beat)
+	preview_beat_label.text = "플레이 · 다음 시범까지 %d박" % left if left > 0 else "다음 시범 시작"
+
+
+func _change_setting(value: float, key: String) -> void:
+	layout.set(key, value)
 	_sync_controls()
 	player_preview.apply_gui_layout(layout)
+	if transition_settings.visible:
+		_restart_preview_cycle()
 	_refresh_dirty()
 
 
 func _sync_controls() -> void:
-	for key in ["demo", "play"]:
-		var value := float(layout.get(key + "_grid_size"))
+	for key in size_spins:
+		var value := float(layout.get(key))
 		size_sliders[key].set_value_no_signal(value)
 		size_spins[key].set_value_no_signal(value)
 
 
-func _sizes() -> Vector2:
-	return Vector2(layout.demo_grid_size, layout.play_grid_size)
+func _values() -> Dictionary:
+	var values := {}
+	for key in size_spins:
+		values[key] = layout.get(key)
+	return values
 
 
 func _refresh_dirty() -> void:
-	unsaved = _sizes() != saved_sizes
+	unsaved = _values() != saved_values
 	save_button.disabled = not unsaved
-	status.text = "● 저장하지 않은 변경 · 미리보기에 반영됨 · 저장하면 게임에 적용됩니다." if unsaved else "저장된 레이아웃 · 그리드 크기를 조절하면 미리보기에 바로 반영됩니다."
+	status.text = "● 저장하지 않은 변경 · 저장하면 게임에 적용됩니다." if unsaved else "저장된 레이아웃"
 	status.add_theme_color_override("font_color", GameGrid.VIOLET if unsaved else AppStyle.MUTED)
 
 
@@ -243,7 +330,7 @@ func _save() -> void:
 		status.text = "저장 실패: " + error_string(error)
 		status.add_theme_color_override("font_color", AppStyle.RED)
 		return
-	saved_sizes = _sizes()
+	saved_values = _values()
 	_refresh_dirty()
 	status.text = "저장됨 · 게임 창으로 돌아가면 적용됩니다. 다음 실행과 빌드에도 반영됩니다."
 
@@ -251,9 +338,14 @@ func _save() -> void:
 func _reset() -> void:
 	for spin in size_spins.values():
 		spin.get_line_edit().release_focus()
-	layout = GuiLayout.new()
+	var defaults := GuiLayout.new()
+	for key: String in size_spins:
+		if key.begins_with("warning_") == transition_settings.visible:
+			layout.set(key, defaults.get(key))
 	_sync_controls()
 	player_preview.apply_gui_layout(layout)
+	if transition_settings.visible:
+		_restart_preview_cycle()
 	_refresh_dirty()
 
 

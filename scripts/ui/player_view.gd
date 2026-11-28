@@ -26,6 +26,9 @@ var preferences_path := "user://settings.cfg"
 var detailed_judgment := false
 var detailed_judgment_check := CheckBox.new()
 var timing_readout := TimingReadout.new()
+var transition_warning := TransitionWarning.new()
+var _warning_start_in_response := INF
+var _warning_accent := GameGrid.VIOLET
 var state := "ready"
 var offset_ms := 0.0
 var _last_time := -1000.0
@@ -112,6 +115,8 @@ func _build_ui() -> void:
 	timing_readout.position = Vector2(140, 168)
 	timing_readout.size = Vector2(260, 60)
 	stage.add_child(timing_readout)
+	stage.add_child(transition_warning)
+	transition_warning.visibility_changed.connect(_position_timing_readout)
 	hud.name = "HUD"
 	hud.size = Vector2(540, 160)
 	hud.pause_requested.connect(_pause)
@@ -286,8 +291,15 @@ func apply_gui_layout(layout: GuiLayout) -> void:
 	input_pad.size = Vector2.ONE * layout.play_grid_size
 	input_pad.position = Vector2(270, 712) - input_pad.size * 0.5
 	timing_readout.position.y = maxf(148.0, demo_pad.position.y - 70.0)
+	transition_warning.configure(layout, demo_pad.get_rect())
 	decor.grid_gap = Vector2(demo_pad.position.y + demo_pad.size.y, input_pad.position.y)
 	decor.queue_redraw()
+
+
+func _position_timing_readout() -> void:
+	# Keep both the centered warning and a live timing judgment legible.
+	timing_readout.position.x = 10.0 if transition_warning.visible else 140.0
+	timing_readout.scale = Vector2.ONE * (0.82 if transition_warning.visible else 1.0)
 
 
 func _layout_ui() -> void:
@@ -341,6 +353,7 @@ func _reset_session() -> void:
 	demo_pad.clear()
 	input_pad.clear()
 	timing_readout.clear()
+	transition_warning.hide()
 	_visual_phase = ""
 	_visual_phrase = -1
 	_update_stats()
@@ -371,6 +384,7 @@ func _toggle() -> void:
 			demo_pad.visuals_paused = false
 			input_pad.visuals_paused = false
 			timing_readout.visuals_paused = false
+			_update_phase(clock.seconds())
 		_: _start()
 
 
@@ -386,6 +400,7 @@ func _pause() -> void:
 
 
 func _show_menu() -> void:
+	transition_warning.hide()
 	input_pad.interactive = false
 	match state:
 		"paused":
@@ -461,6 +476,8 @@ func _on_music_finished() -> void:
 func _update_phase(time: float) -> void:
 	var phase := session.phase_at(time)
 	_set_phase(str(phase.kind), int(phase.index))
+	if is_finite(_warning_start_in_response):
+		transition_warning.show_at(float(phase.beat) - _warning_start_in_response, _warning_accent)
 
 
 func _set_phase(kind: String, phrase_index: int = -1) -> void:
@@ -470,13 +487,37 @@ func _set_phase(kind: String, phrase_index: int = -1) -> void:
 		return
 	_visual_phase = kind
 	_visual_phrase = phrase_index
-	var short_phrase: bool = phrase_index >= 0 and phrase_index < chart.phrases.size() and is_equal_approx(float(chart.phrases[phrase_index].length_beats), 2.0)
+	transition_warning.hide()
+	_warning_start_in_response = INF
+	var phrases: Array = session.chart.phrases if session != null else []
+	if kind == "response" and phrase_index >= 0:
+		_prepare_warning(phrases, phrases[phrase_index])
+	var short_phrase := phrase_index >= 0 and phrase_index < phrases.size() and is_equal_approx(float(phrases[phrase_index].length_beats), 2.0)
 	var demo_accent := GameGrid.CORAL if short_phrase else GameGrid.VIOLET
 	demo_pad.set_accent(demo_accent)
 	demo_pad.set_active(kind == "demo")
 	input_pad.set_active(kind == "response")
 	decor.set_phase(kind, demo_accent)
 	hud.set_phase(kind, demo_accent)
+
+
+func _prepare_warning(phrases: Array, current: Dictionary) -> void:
+	# Charts may store phrases out of time order, or leave rests between them.
+	# Find the next demonstration once when entering this response.
+	var length := float(current.length_beats)
+	var response := float(current.response_beat)
+	var next_start := INF
+	var next_length := 0.0
+	for phrase in phrases:
+		var start := float(phrase.show_beat)
+		if start >= response + length - 0.000001 and start < next_start:
+			next_start = start
+			next_length = float(phrase.length_beats)
+	var to_two := is_equal_approx(length, 4.0) and is_equal_approx(next_length, 2.0)
+	var to_four := is_equal_approx(length, 2.0) and is_equal_approx(next_length, 4.0)
+	if to_two or to_four:
+		_warning_start_in_response = next_start - response - TransitionWarning.LEAD_BEATS
+		_warning_accent = TransitionWarning.ORANGE if to_two else GameGrid.VIOLET
 
 
 func _press(cell: int) -> void:

@@ -27,10 +27,10 @@ func _run() -> void:
 	await process_frame
 	check(editor.player_preview.preview_mode and editor.player_preview.chart.is_empty() and not editor.player_preview.clock.running and not editor.player_preview.input_pad.interactive, "Preview uses the real player UI without starting a song or accepting gameplay input")
 	check(not editor.unsaved and editor.save_button.disabled, "A fresh layout starts at the saved defaults")
-	editor.size_sliders.demo.value = 300
-	editor.size_spins.play.value = 180
+	editor.size_sliders.demo_grid_size.value = 300
+	editor.size_spins.play_grid_size.value = 180
 	check(editor.player_preview.demo_pad.size == Vector2(300, 300) and editor.player_preview.input_pad.size == Vector2(180, 180), "Slider and numeric input independently resize the real preview grids")
-	check(editor.size_spins.demo.value == 300 and editor.size_sliders.play.value == 180 and editor.unsaved, "Both input styles stay synchronized and mark the edit as unsaved")
+	check(editor.size_spins.demo_grid_size.value == 300 and editor.size_sliders.play_grid_size.value == 180 and editor.unsaved, "Both input styles stay synchronized and mark the edit as unsaved")
 	check(not FileAccess.file_exists(layout_path), "Live preview leaves the saved layout untouched until Save")
 	editor.save_button.pressed.emit()
 	var saved := GuiLayout.read(layout_path)
@@ -44,12 +44,12 @@ func _run() -> void:
 	await process_frame
 	check(player.demo_pad.size == editor.player_preview.demo_pad.size and player.input_pad.size == editor.player_preview.input_pad.size, "A real game loads exactly the saved preview geometry")
 	player.hide()
-	editor.size_spins.demo.value = 180
-	editor.size_sliders.play.value = 300
+	editor.size_spins.demo_grid_size.value = 180
+	editor.size_sliders.play_grid_size.value = 300
 	await process_frame
-	editor.size_spins.play.get_line_edit().grab_focus()
+	editor.size_spins.play_grid_size.get_line_edit().grab_focus()
 	await process_frame
-	editor.size_spins.play.get_line_edit().text = "320"
+	editor.size_spins.play_grid_size.get_line_edit().text = "320"
 	check(player.demo_pad.size.x == 300 and player.input_pad.size.x == 180, "Unsaved editor changes do not alter a running game")
 	# Send the actual keyboard shortcut; preview children must not consume it.
 	for pressed in [true, false]:
@@ -62,6 +62,35 @@ func _run() -> void:
 	check(not editor.unsaved and GuiLayout.read(layout_path).play_grid_size == 320, "Ctrl+S saves while the preview is present")
 	player._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
 	check(player.demo_pad.size.x == 180 and player.input_pad.size.x == 320, "Returning to the game reloads a saved layout without restarting")
+	editor.screen_select.select(2)
+	editor.screen_select.item_selected.emit(2)
+	var warning := editor.player_preview.transition_warning
+	check(editor.is_processing() and warning.visible and editor.player_preview.input_pad.emphasis, "Transition screen opens with the live warning already playing")
+	editor.size_sliders.warning_size.value = 64
+	editor.size_spins.warning_flicker_beats.value = 0.5
+	editor.size_spins.warning_flicker_percent.value = 50
+	check(editor.unsaved and warning.size.x == 64 and is_equal_approx(warning.self_modulate.a, 0.5), "Editing the glyph restarts its animation with the new size and depth")
+	editor.preview_bpm.value = 60
+	editor._process(0.5)
+	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "At the preview BPM the orange warning locks at the configured half beat")
+	editor._process(1.5)
+	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
+	editor._process(1.0)
+	check(warning.visible and editor.player_preview.input_pad.emphasis, "The preview loops back to the next warning")
+	editor.direction_select.select(1)
+	editor.direction_select.item_selected.emit(1)
+	editor._process(0.75)
+	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET) and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Reverse preview shows a violet warning during the short pattern's response")
+	editor._save()
+	player._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
+	check(player.transition_warning.size.x == 64 and player.transition_warning.flicker_beats == 0.5 and player.transition_warning.flicker_depth == 0.5, "Saved editor animation settings also reach a running game")
+	editor.size_sliders.warning_flicker_beats.value = 0
+	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length leaves a steady warning from onset")
+	editor.reset_button.pressed.emit()
+	check(warning.size.x == 48.0 and editor.layout.play_grid_size == 320, "Reset on the transition screen restores only its settings")
+	editor.screen_select.select(0)
+	editor.screen_select.item_selected.emit(0)
+	check(not editor.is_processing() and not warning.visible and editor.player_preview.demo_pad.accent == GameGrid.VIOLET, "Leaving the transition stops the loop and restores the ordinary grid preview")
 	player.show()
 	for dimensions in [Vector2(320, 568), Vector2(360, 800), Vector2(390, 844), Vector2(540, 960), Vector2(768, 1024), Vector2(1100, 900), Vector2(960, 540)]:
 		player.size = dimensions
@@ -73,7 +102,10 @@ func _run() -> void:
 	var maximum := GuiLayout.new()
 	maximum.demo_grid_size = 320
 	maximum.play_grid_size = 180
+	maximum.warning_size = 64
 	player.apply_gui_layout(maximum)
+	var warning_rect := player.transition_warning.get_rect()
+	check(warning_rect.position.y > player.hud.progress.get_rect().end.y and warning_rect.end.y < player.demo_pad.position.y, "The largest warning and demo grid fit between the HUD and the tiles")
 	check(player.timing_readout.position.y >= player.hud.progress.get_rect().end.y and player.timing_readout.get_rect().end.y <= player.demo_pad.position.y, "Detailed timing stays between the HUD and the largest demo grid")
 	check(not player.demo_pad.get_rect().intersects(player.input_pad.get_rect()), "Independent grid sizes leave the two grids separate")
 	player.apply_gui_layout(saved)
