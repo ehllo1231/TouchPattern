@@ -40,6 +40,7 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 	var remaining := duration_beats - elapsed_beats
 	var intensity := 1.0
 	var halo_power := 1.0
+	var core_only := false
 	if elapsed_beats < edge_beats:
 		var t := elapsed_beats / edge_beats
 		# A short strike, one voltage dip, then a decisive ignition and settle.
@@ -49,14 +50,20 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 		halo_power = pow(intensity, 5.0)
 	elif remaining < edge_beats and flicker_depth > 0.0:
 		var t := 1.0 - remaining / edge_beats
-		# The tube flickers once while the surrounding light fades continuously.
-		var dip := lerpf(0.58, 0.34, flicker_depth)
-		var spark := dip + 0.32 * flicker_depth
-		intensity = lerpf(1.0, dip, smoothstep(0.0, 0.42, t))
-		intensity = lerpf(intensity, spark, smoothstep(0.42, 0.61, t))
-		intensity *= 1.0 - smoothstep(0.61, 1.0, t)
-		halo_power = 1.0 - smoothstep(0.0, 1.0, t)
+		if t < 0.67:
+			# Hold the first interruption long enough to read, then relight the whole tube.
+			var dim := pow(1.0 - flicker_depth, 3.0)
+			intensity = lerpf(1.0, dim, smoothstep(0.03, 0.16, t))
+			intensity += (1.0 - dim) * 0.78 * smoothstep(0.34, 0.44, t)
+			intensity *= 1.0 - smoothstep(0.56, 0.67, t)
+			halo_power = intensity * intensity
+		else:
+			# A shorter, weaker restrike catches only the white center of the tube mask.
+			core_only = true
+			halo_power = 0.0
+			intensity = 0.58 * flicker_depth * smoothstep(0.72, 0.78, t) * (1.0 - smoothstep(0.86, 0.94, t))
 	_neon.set_shader_parameter(&"halo_power", halo_power)
+	_neon.set_shader_parameter(&"core_only", core_only)
 	self_modulate = Color(accent, intensity)
 	show()
 
