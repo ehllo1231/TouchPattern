@@ -12,6 +12,8 @@ var initial_phrase := -1
 var autoplay := false
 var auto_mode := false
 var show_song_select := false
+var preview_mode := false
+var gui_layout_path := GuiLayout.PATH
 var chart_path := ""
 var chart: Dictionary = {}
 var stream: AudioStream
@@ -65,6 +67,13 @@ func _ready() -> void:
 	offset_ms = float(settings.get_value("timing", "offset_ms", 0.0))
 	detailed_judgment = bool(settings.get_value("display", "detailed_judgment", false))
 	_build_ui()
+	apply_gui_layout(GuiLayout.read(gui_layout_path))
+	if preview_mode:
+		menu.hide()
+		set_process(false)
+		set_process_unhandled_key_input(false)
+		hud.pause_button.disabled = true
+		return
 	_load_chart(initial_path, initial_phrase)
 	if autoplay and not chart.is_empty():
 		_start()
@@ -200,6 +209,7 @@ func _build_menu() -> void:
 	column.add_child(utilities)
 	utilities.add_child(_menu_button("채보 열기", _open_chart))
 	utilities.add_child(_menu_button("메이커 ↗", _open_maker))
+	utilities.add_child(_menu_button("GUI ↗", _open_gui_editor))
 
 
 func _menu_button(text: String, action: Callable, primary: bool = false) -> Button:
@@ -268,6 +278,16 @@ func _build_settings() -> void:
 	var hint := AppStyle.label("입력이 늦으면 + 방향으로 조정하세요.", 13, AppStyle.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	settings_panel.add_child(hint)
+
+
+func apply_gui_layout(layout: GuiLayout) -> void:
+	demo_pad.size = Vector2.ONE * layout.demo_grid_size
+	demo_pad.position = Vector2(270, 368) - demo_pad.size * 0.5
+	input_pad.size = Vector2.ONE * layout.play_grid_size
+	input_pad.position = Vector2(270, 712) - input_pad.size * 0.5
+	timing_readout.position.y = maxf(148.0, demo_pad.position.y - 70.0)
+	decor.grid_gap = Vector2(demo_pad.position.y + demo_pad.size.y, input_pad.position.y)
+	decor.queue_redraw()
 
 
 func _layout_ui() -> void:
@@ -517,6 +537,12 @@ func _open_maker() -> void:
 		_message("채보 메이커 창을 열 수 없어요.", AppStyle.RED)
 
 
+func _open_gui_editor() -> void:
+	_pause()
+	if AppStyle.launch_gui_editor() < 0:
+		_message("GUI 에디터 창을 열 수 없어요.", AppStyle.RED)
+
+
 func _show_settings() -> void:
 	if state == "playing":
 		_pause()
@@ -561,3 +587,5 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "playing":
 		_pause()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN and is_node_ready() and not preview_mode:
+		apply_gui_layout(GuiLayout.read(gui_layout_path))

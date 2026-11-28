@@ -29,6 +29,7 @@ Windows에서는 `start-game.cmd` 또는 `start-chart-maker.cmd`를 실행하면
 
 - **게임:** `start-game.cmd` 더블클릭
 - **채보 메이커:** `start-chart-maker.cmd` 더블클릭
+- **GUI 에디터:** `start-gui-editor.cmd` 더블클릭
 
 프로젝트의 `.tools`에 포터블 Godot가 준비되어 있습니다. 다른 PC에서 이 폴더 없이 시작하면 첫 실행에 공식 GitHub 릴리스에서 엔진을 다운로드하고 SHA512를 확인합니다. 시스템 설치나 PATH 변경은 하지 않습니다. 첫 실행에는 폰트와 음원을 가져오는 시간이 조금 걸립니다.
 
@@ -42,8 +43,19 @@ Godot 에디터를 직접 쓰려면 **Import → `project.godot` 선택 → F5**
 godot --headless --path . --editor --quit
 godot --path .
 godot --path . -- --chart-maker
+godot --path . -- --gui-editor
 godot --path . -- --chart /absolute/path/song.json
 ```
+
+## GUI 에디터
+
+`start-gui-editor.cmd` 또는 게임 일시정지 메뉴의 **GUI ↗**로 별도 창을 엽니다. 왼쪽에서 **시범 그리드 / 플레이 그리드**의 한 변 길이를 슬라이더나 숫자로 각각 조절하면, 오른쪽의 실제 게임 UI에 바로 반영됩니다. 2×2 칸 수와 중심 위치는 유지하며, 540×960 기준으로 180~320px를 지원합니다. 기본값은 두 그리드 모두 260px입니다.
+
+미리보기의 **시범 / 플레이**로 활성 색상을 바꾸고, 화면 크기 목록으로 일반·긴 세로 화면, 태블릿, 가로 화면을 확인할 수 있습니다. **편집할 화면 → 시작 화면**에서는 실제 타이틀을 미리 봅니다. 이번 버전의 편집 항목은 게임 화면의 두 그리드 크기이며, 시작 화면 편집 항목은 아직 없습니다. 미리보기에서는 음악이나 게임이 실행되지 않습니다.
+
+**저장 / Ctrl+S**를 누르면 `assets/ui/gui_layout.tres`에 저장합니다. 실행 중인 게임 창으로 돌아오면 저장값을 다시 읽고, 다음 게임 실행과 APK 빌드에도 같은 값이 적용됩니다. **기본값으로**는 미리보기의 크기를 260px로 되돌리며, 게임에 반영하려면 저장하세요. 저장 전 수정은 미리보기에만 적용됩니다.
+
+[GUI 에디터 화면](docs/screenshots/gui-editor.png)
 
 ## Android APK
 
@@ -79,7 +91,7 @@ godot --headless --path . --export-debug Android builds/android/RINNER-debug.apk
 - **R:** 처음부터 다시 시작. 메이커의 플레이 테스트에서는 테스트를 시작했던 위치부터 다시 시작합니다.
 - **Esc:** 일시정지 / 이어서 재생
 - 아래쪽 그리드는 마우스와 터치도 받습니다. 동시 입력은 키보드 또는 멀티터치를 사용하세요.
-- 위쪽 그리드가 **보라색(4박 등 일반 패턴)** 또는 **붉은색(길이 2박 패턴)**으로 빛날 때 위치와 박자를 기억하고, 아래쪽 **청록색** 그리드가 활성화되면 입력합니다. 패턴 색상은 실제 시범 시작에 맞춰 전환합니다. 한 곡에 4박과 2박을 섞을 수 있고 BPM과 판정 기준은 동일합니다. 두 그리드의 크기와 간격은 같으며, 타일에는 키 안내나 번호가 표시되지 않습니다. 재현 구간에는 정답 노트가 표시되지 않습니다.
+- 위쪽 그리드가 **보라색(4박 등 일반 패턴)** 또는 **붉은색(길이 2박 패턴)**으로 빛날 때 위치와 박자를 기억하고, 아래쪽 **청록색** 그리드가 활성화되면 입력합니다. 패턴 색상은 실제 시범 시작에 맞춰 전환합니다. 한 곡에 4박과 2박을 섞을 수 있고 BPM과 판정 기준은 동일합니다. 두 그리드는 기본 크기가 같고 GUI 에디터에서 각각 조절할 수 있으며, 타일에는 키 안내나 번호가 표시되지 않습니다. 재현 구간에는 정답 노트가 표시되지 않습니다.
 - 판정은 Perfect ±50ms, Good ±100ms, OK ±150ms입니다. 노트를 놓치거나 재현 구간에서 잘못된 칸·쉼표에 입력하면 모두 Miss이며 정확도가 낮아집니다.
 - 판정은 입력한 **타일 안**에만 잠깐 나타납니다. PERFECT는 청록색 체크와 확산, GOOD은 하늘색 링, OK는 연한 금색 링, MISS는 분홍색 모서리로 구분합니다. 같은 타일의 새 판정은 이전 효과를 교체하며, 모든 판정은 0.44초 이내에 사라집니다.
 - 상단에는 점수, 콤보, 얇은 진행 게이지와 일시정지 아이콘만 표시합니다. **다시 시작 / 채보 열기 / 메이커 / 소리·타이밍 설정**은 일시정지 메뉴에서 사용할 수 있습니다. 결과와 정확도는 곡이 끝난 뒤 메뉴에서 확인합니다.
@@ -148,6 +160,7 @@ godot --headless --path . --export-debug Android builds/android/RINNER-debug.apk
 - `scripts/core/rhythm_session.gd`: 시범·재현 구간과 판정
 - `scripts/core/note_sounds.gd`, `note_sound_config.gd`: 교체 가능한 노트 효과음과 설정
 - `scripts/ui/player_view.gd`: 플레이어
+- `scripts/ui/gui_editor.gd`, `gui_layout.gd`, `assets/ui/gui_layout.tres`: 실제 화면 미리보기, 그리드 크기 편집·저장과 게임 적용
 - `scripts/app.gd`, `scripts/ui/front_menu.gd`: 타이틀 → 곡 선택 → 플레이 → 곡 선택 화면 전환
 - `scripts/ui/front_artwork.gd`: 보라·청록 루프 문양과 곡 카드의 벡터 아트
 - `scripts/ui/song_library.gd`: 두 곡의 목록, 기존 저장 채보 우선 사용, 실제 곡 정보·음원 검증
@@ -165,6 +178,7 @@ godot --headless --path . --editor --quit
 godot --headless --path . --script tests/run_tests.gd
 godot --headless --max-fps 120 --path . --script tests/chart_saving.gd
 godot --headless --max-fps 120 --path . --script tests/player_ui.gd
+godot --headless --max-fps 120 --path . --script tests/gui_editor.gd
 godot --headless --max-fps 120 --path . --script tests/two_beat_patterns.gd
 godot --headless --max-fps 120 --path . --script tests/front_flow.gd
 godot --headless --max-fps 120 --path . --script tests/bpm_precision.gd
@@ -183,6 +197,8 @@ godot --headless --max-fps 120 --path . --script tests/playthrough.gd -- --auto-
 `run_tests.gd`는 판정 경계, 동시치기, 오입력, 채보 검증, 경로 보존, 저장·재로딩, 실제 UI와 멀티터치, 선택 패턴 시작·재시작, AUTO 타이밍과 수동 입력 차단을 확인합니다. `song_clock.gd`는 오디오 시계의 단조 증가, 시스템 시계와의 독립성, 탐색·일시정지·재시작, 음악 종료 후 판정 유예 시간을 확인합니다. `playthrough.gd`는 실제 키 입력으로 전체 곡 또는 일곱 번째 패턴부터 14개 노트를 플레이하며, `--auto-mode`를 추가하면 키 입력 없이 AUTO 재생을 확인합니다. Windows의 실제 오디오 장치로 검증하려면 `--headless` 대신 `--display-driver headless --audio-driver WASAPI`를 사용하세요. `--headless`만 사용하면 오디오 드라이버가 Dummy이므로 실제 장치의 동기화 측정에는 적합하지 않습니다.
 
 `player_ui.gd`는 320×568부터 긴 모바일 화면, 태블릿, 가로 화면까지 7개 크기에서 레이아웃과 터치 영역을 확인합니다. 실제 터치 이벤트로 메뉴 시작·타일 입력을 실행해 마우스 에뮬레이션에 따른 이중 판정이 없는지, 일시정지가 입력과 시계를 함께 막는지, 단계 전환·판정 효과·결과·재시작이 정상인지 검사합니다. 게임 타일은 원시 멀티터치를 처리하고 에뮬레이션된 마우스 이벤트를 무시하며, 메뉴와 슬라이더는 Godot의 기본 터치 지원을 사용합니다.
+
+`gui_editor.gd`는 슬라이더·숫자 입력의 미리보기 동기화, 입력 중 Ctrl+S 저장, 게임의 저장값 로딩과 창 복귀 시 갱신, 시작 화면·해상도 전환, 기본값 복원과 재실행을 확인합니다. 서로 다른 그리드 크기로 7개 화면 비율의 배치·터치 영역, 실제 터치 판정, 최대 크기에서 상세 판정 표시 위치도 검증합니다.
 
 `two_beat_patterns.gd`는 4박→2박→2박→4박 전환, 사전 예고 없이 실제 시작에 맞춘 붉은 시범과 청록색 재현, HUD·장식·셰이더 반영, 일시정지·선택 구간 시작·재시작·AUTO를 확인합니다. 메이커의 재현 시작 자동 계산, 곡 종료점 연동, 노트가 있는 구간의 축소 방지와 저장·재로딩도 검증합니다.
 

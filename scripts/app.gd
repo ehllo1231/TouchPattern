@@ -14,7 +14,13 @@ func _ready() -> void:
 	var chart_index := args.find("--chart")
 	if chart_index >= 0 and chart_index + 1 < args.size():
 		chart_path = args[chart_index + 1]
-	if args.has("--chart-maker"):
+	if args.has("--gui-editor"):
+		get_tree().root.content_scale_size = Vector2i(1100, 800)
+		DisplayServer.window_set_min_size(Vector2i(1000, 740))
+		DisplayServer.window_set_size(Vector2i(1180, 900))
+		DisplayServer.window_set_title("RINNER · GUI Editor")
+		_replace_view(GuiEditor.new())
+	elif args.has("--chart-maker"):
 		get_tree().root.content_scale_size = Vector2i(480, 900)
 		DisplayServer.window_set_min_size(Vector2i(1000, 740))
 		DisplayServer.window_set_size(Vector2i(1100, 900))

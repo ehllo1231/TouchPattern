@@ -2,6 +2,7 @@ class_name StageDecor
 extends Control
 
 var accent := GameGrid.VIOLET
+var grid_gap := Vector2(498, 582)
 var _transition: Tween
 
 
@@ -33,7 +34,9 @@ func _draw() -> void:
 	for x in [32.0, 508.0]:
 		_diamond(Vector2(x, 403), 4.2, Color(accent, 0.85))
 	for index in range(3):
-		_diamond(Vector2(270, 530 + index * 13), 3.6 - index * 0.7, Color(accent, 0.9 - index * 0.32))
+		var spacing := minf(13.0, (grid_gap.y - grid_gap.x) * 0.25)
+		var y := (grid_gap.x + grid_gap.y) * 0.5 + 3.0 + (index - 1) * spacing
+		_diamond(Vector2(270, y), 3.6 - index * 0.7, Color(accent, 0.9 - index * 0.32))
 	for index in range(70):
 		var opacity := float(index) / 70.0 * 0.6
 		var x := 80.0 + index * 2.0

@@ -94,3 +94,11 @@ static func launch(chart_path: String, maker: bool = false, autoplay: bool = fal
 	arguments.append_array(["--chart", chart_path])
 	return OS.create_instance(arguments)
 
+
+static func launch_gui_editor() -> int:
+	var arguments := PackedStringArray()
+	if OS.has_feature("editor"):
+		arguments.append_array(["--path", ProjectSettings.globalize_path("res://")])
+	arguments.append_array(["--", "--gui-editor"])
+	return OS.create_instance(arguments)
+
