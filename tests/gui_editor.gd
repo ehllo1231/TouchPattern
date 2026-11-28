@@ -73,7 +73,12 @@ func _run() -> void:
 	check(editor.unsaved and warning.size.x == 64 and not editor.is_processing() and not warning.visible, "Editing the glyph or tempo does not start a preview")
 	editor.preview_play_button.pressed.emit()
 	check(editor.is_processing() and editor.preview_play_button.disabled and warning.visible and is_equal_approx(warning.self_modulate.a, 0.5), "Play starts a single preview using the edited depth")
-	editor._process(0.5)
+	editor._process(0.07)
+	var strike := warning.self_modulate.a
+	editor._process(0.13)
+	var dip := warning.self_modulate.a
+	check(strike < 1.0 and dip < strike and warning.visible, "The initial neon strike briefly dips while the tube remains visible")
+	editor._process(0.30)
 	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "At the preview BPM the orange warning locks at the configured half beat")
 	editor.size_sliders.warning_size.value = 63
 	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
