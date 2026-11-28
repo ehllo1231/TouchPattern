@@ -28,6 +28,7 @@ var detailed_judgment_check := CheckBox.new()
 var timing_readout := TimingReadout.new()
 var transition_warning := TransitionWarning.new()
 var _warning_start_in_response := INF
+var _warning_duration_beats := 0.0
 var _warning_accent := GameGrid.VIOLET
 var state := "ready"
 var offset_ms := 0.0
@@ -477,7 +478,7 @@ func _update_phase(time: float) -> void:
 	var phase := session.phase_at(time)
 	_set_phase(str(phase.kind), int(phase.index))
 	if is_finite(_warning_start_in_response):
-		transition_warning.show_at(float(phase.beat) - _warning_start_in_response, _warning_accent)
+		transition_warning.show_at(float(phase.beat) - _warning_start_in_response, _warning_duration_beats, _warning_accent)
 
 
 func _set_phase(kind: String, phrase_index: int = -1) -> void:
@@ -516,7 +517,11 @@ func _prepare_warning(phrases: Array, current: Dictionary) -> void:
 	var to_two := is_equal_approx(length, 4.0) and is_equal_approx(next_length, 2.0)
 	var to_four := is_equal_approx(length, 2.0) and is_equal_approx(next_length, 4.0)
 	if to_two or to_four:
-		_warning_start_in_response = next_start - response - TransitionWarning.LEAD_BEATS
+		var start := next_start - response - TransitionWarning.LEAD_BEATS
+		if start >= length:
+			return
+		_warning_start_in_response = start
+		_warning_duration_beats = minf(TransitionWarning.LEAD_BEATS, length - start)
 		_warning_accent = TransitionWarning.ORANGE if to_two else GameGrid.VIOLET
 
 

@@ -83,7 +83,13 @@ func _run() -> void:
 	editor.size_sliders.warning_size.value = 63
 	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
 	editor.size_sliders.warning_size.value = 64
-	editor._process(1.5)
+	editor._process(1.15)
+	var exit_dip := warning.self_modulate.a
+	editor._process(0.13)
+	var last_spark := warning.self_modulate.a
+	editor._process(0.20)
+	check(warning.visible and warning.self_modulate.a < exit_dip and exit_dip < last_spark and last_spark < 1.0, "Before the demo the orange neon dips, sparks once, then fades out")
+	editor._process(0.03)
 	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
 	editor._process(1.25)
 	await process_frame
@@ -104,6 +110,8 @@ func _run() -> void:
 	editor._process(3.0)
 	editor.preview_play_button.pressed.emit()
 	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length leaves a steady warning from onset on replay")
+	editor._process(1.95)
+	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length also skips the shutdown animation")
 	editor._process(3.0)
 	editor.reset_button.pressed.emit()
 	check(warning.size.x == 48.0 and editor.layout.play_grid_size == 320 and not editor.is_processing(), "Reset restores the transition settings without starting playback")

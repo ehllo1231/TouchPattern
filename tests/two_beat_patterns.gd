@@ -56,6 +56,7 @@ func _run() -> void:
 	player.preferences_path = "user://tests/two_beat_preferences.cfg"
 	player.initial_path = fixture_path
 	root.add_child(player)
+	player.apply_gui_layout(GuiLayout.new())
 	player.size = Vector2(540, 960)
 	await process_frame
 	player._start()
@@ -110,8 +111,10 @@ func _run() -> void:
 	player.clock.pause()
 	at_beat(player, 18.0)
 	check(warning.visible and warning.self_modulate.a < 1.0, "A two-to-four warning starts on the first response beat")
+	at_beat(player, 19.0)
+	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "The four-beat warning holds steady in violet")
 	at_beat(player, 19.999)
-	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "The four-beat warning stays violet until the next demo")
+	check(warning.visible and warning.self_modulate.a < 0.01, "The violet neon fades before the demo downbeat")
 	at_beat(player, 20.0)
 	check(not warning.visible, "Four-beat demo also hides the warning at its first beat")
 	check(player.demo_pad.accent == GameGrid.VIOLET and player.demo_pad._hit_colors[0] == GameGrid.VIOLET, "Returning to four beats restores purple")
@@ -142,6 +145,8 @@ func _run() -> void:
 	check(not warning.visible, "A rest moves the warning window with the upcoming demo")
 	player._update_phase(TouchChart.beat_to_seconds(spaced, 11.5))
 	check(warning.visible and warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "The warning uses chronological order rather than JSON order")
+	player._update_phase(TouchChart.beat_to_seconds(spaced, 11.999))
+	check(warning.visible and warning.self_modulate.a < 0.01, "A shortened warning finishes shutting down before the rest")
 	player._update_phase(TouchChart.beat_to_seconds(spaced, 12.0))
 	check(not warning.visible, "There is no lingering warning during a rest")
 	player.queue_free()
