@@ -50,12 +50,16 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 func _flicker_intensity(t: float, already_lit: bool) -> float:
 	var first_light := 0.65 * smoothstep(0.0, 0.10, t)
 	var dim := 1.0 - flicker_depth
+	var recovery_end := 1.0
 	if already_lit:
-		# Carry the steady light into the dip and keep the tube visible until the final cut.
 		first_light = 1.0
 		dim = maxf(dim, 0.15)
+		# Finish the rebound early enough to dim once more before the gap.
+		recovery_end = 0.72
 	var strike := first_light * (1.0 - smoothstep(0.18, 0.32, t))
-	var recovery := 0.8 * smoothstep(0.52, 0.68, t) + 0.2 * smoothstep(0.68, 1.0, t)
+	var recovery := 0.8 * smoothstep(0.52, 0.68, t) + 0.2 * smoothstep(0.68, recovery_end, t)
+	if already_lit:
+		recovery *= 1.0 - smoothstep(recovery_end, 0.96, t)
 	return lerpf(dim, 1.0, strike + recovery)
 
 
