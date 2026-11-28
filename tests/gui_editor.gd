@@ -86,23 +86,20 @@ func _run() -> void:
 	editor.size_sliders.warning_size.value = 63
 	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
 	editor.size_sliders.warning_size.value = 64
-	editor._process(1.07)
+	editor._process(1.00)
 	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "Shutdown starts at the steady warning brightness")
-	editor._process(0.13)
-	check(warning.visible and dip > 0.0 and is_equal_approx(warning.self_modulate.a, dip), "Shutdown reaches the same visible dip at the same beat as ignition")
+	editor._process(0.20)
+	check(is_equal_approx(warning.self_modulate.a, recovery), "Shutdown retraces the ignition recovery")
+	editor._process(0.10)
+	check(warning.visible and is_equal_approx(warning.self_modulate.a, dip), "Shutdown reaches the ignition dip at the mirrored beat")
 	editor.size_sliders.warning_flicker_percent.value = 100
 	editor._process(0.0)
-	check(warning.visible and warning.self_modulate.a > 0.0 and warning.self_modulate.a < dip, "Even the deepest shutdown dip leaves the tube lit")
+	check(warning.visible and is_zero_approx(warning.self_modulate.a), "Full flicker strength also reaches zero during the mirrored dip")
 	editor.size_sliders.warning_flicker_percent.value = 50
-	editor._process(0.10)
-	check(recovery > dip and recovery < 1.0 and is_equal_approx(warning.self_modulate.a, recovery), "Shutdown brightens again at the same rate as ignition")
+	editor._process(0.13)
+	check(is_equal_approx(warning.self_modulate.a, strike), "The final flash mirrors the first ignition strike")
 	editor._process(0.06)
-	check(warning.visible and warning.self_modulate.a > 0.99, "The warning relights before the final dip")
-	editor._process(0.06)
-	var falling := warning.self_modulate.a
-	check(dip < falling and falling < 0.99, "The light passes through intermediate brightness after the rebound")
-	editor._process(0.07)
-	check(warning.visible and is_equal_approx(warning.self_modulate.a, dip), "The warning is still faintly lit immediately before the cut")
+	check(warning.visible and dip < warning.self_modulate.a and warning.self_modulate.a < strike, "The last flash weakens before the gap")
 	editor._process(0.02)
 	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
 	editor._process(1.25)
