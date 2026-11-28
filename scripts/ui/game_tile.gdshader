@@ -8,6 +8,8 @@ uniform vec4 hit_color : source_color = vec4(0.72, 0.52, 0.98, 1.0);
 uniform float activation : hint_range(0.0, 1.0) = 0.0;
 uniform float flash : hint_range(0.0, 1.0) = 0.0;
 uniform bool judgment_mode = false;
+uniform vec4 warning_light : source_color = vec4(0.0);
+uniform bool reflect_from_right = false;
 
 float rounded_box(vec2 p, vec2 half_size, float radius) {
 	vec2 q = abs(p) - half_size + radius;
@@ -36,6 +38,14 @@ void fragment() {
 	vec3 edge = mix(vec3(0.34, 0.33, 0.43), phase_color, max(activation * 0.85, feedback_weight * 0.85));
 	edge = mix(edge, mix(hit_color.rgb, vec3(1.0), 0.57), flash);
 	edge += vec3(0.13) * activation * (1.0 - vertical);
+	if (warning_light.a > 0.0) {
+		// The two inner corners catch the tube on their bevel and a little of the face below.
+		float from_inner_edge = 0.5 + (reflect_from_right ? -p.x : p.x) / tile_size.x;
+		vec2 offset = vec2((from_inner_edge - 0.10) / 0.36, vertical / 0.16);
+		float spill = exp(-dot(offset, offset)) * warning_light.a * warning_light.a;
+		surface += warning_light.rgb * spill * (0.15 + 0.32 * inner_light);
+		edge = mix(edge, mix(warning_light.rgb, vec3(1.0), 0.58), spill);
+	}
 	vec3 color = mix(surface, edge, rim);
 	float halo = exp(-max(d, 0.0) * 0.16) * (1.0 - inside);
 	float halo_alpha = halo * (activation * 0.055 + flash * 0.43);

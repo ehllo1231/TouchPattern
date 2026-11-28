@@ -122,6 +122,7 @@ func _build_ui() -> void:
 	timing_readout.size = Vector2(260, 60)
 	stage.add_child(timing_readout)
 	stage.add_child(transition_warning)
+	transition_warning.light_changed.connect(demo_pad.set_warning_reflection)
 	transition_warning.visibility_changed.connect(_position_timing_readout)
 	hud.name = "HUD"
 	hud.size = Vector2(540, 160)

@@ -31,6 +31,7 @@ func _ready() -> void:
 		var shader_material := ShaderMaterial.new()
 		shader_material.shader = TILE_SHADER
 		shader_material.set_shader_parameter("accent", accent)
+		shader_material.set_shader_parameter("reflect_from_right", cell == 0)
 		tile.material = shader_material
 		add_child(tile)
 		_tiles.append(tile)
@@ -65,6 +66,11 @@ func set_active(value: bool) -> void:
 		return
 	emphasis = value
 	set_process(true)
+
+
+func set_warning_reflection(light: Color) -> void:
+	for cell in range(2):
+		_tiles[cell].material.set_shader_parameter("warning_light", light)
 
 
 func set_accent(value: Color) -> void:

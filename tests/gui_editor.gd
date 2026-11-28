@@ -76,9 +76,11 @@ func _run() -> void:
 	check(editor.is_processing() and editor.preview_play_button.disabled and warning.visible and is_equal_approx(warning.self_modulate.a, 0.5), "Play starts a single preview using the edited depth")
 	editor._process(0.07)
 	var strike := warning.self_modulate.a
+	var tile := editor.player_preview.demo_pad._tiles[0].material as ShaderMaterial
 	editor._process(0.13)
 	var dip := warning.self_modulate.a
 	check(strike < 1.0 and dip < strike and warning.visible, "The initial neon strike briefly dips while the tube remains visible")
+	check(tile.get_shader_parameter("warning_light") == warning.self_modulate, "The preview tile tracks the neon dip at the edited flicker strength")
 	editor._process(0.10)
 	var recovery := warning.self_modulate.a
 	editor._process(0.20)
@@ -111,6 +113,7 @@ func _run() -> void:
 	editor.direction_select.select(1)
 	editor.direction_select.item_selected.emit(1)
 	check(not editor.is_processing() and not warning.visible and not editor.preview_play_button.disabled, "Changing direction during playback returns to ready")
+	check(tile.get_shader_parameter("warning_light") == Color.TRANSPARENT, "Changing preview direction clears the old reflection immediately")
 	editor.size_sliders.warning_gap_beats.value = 0.75
 	editor.preview_play_button.pressed.emit()
 	editor._process(0.60)

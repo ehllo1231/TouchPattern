@@ -63,6 +63,8 @@ func _run() -> void:
 	player.set_process(false)
 	player.clock.pause()
 	var warning := player.transition_warning
+	var left_tile := player.demo_pad._tiles[0].material as ShaderMaterial
+	var right_tile := player.demo_pad._tiles[1].material as ShaderMaterial
 	at_beat(player, 9.999)
 	check(not warning.visible, "The warning stays hidden before the last two response beats")
 	at_beat(player, 10.0)
@@ -72,20 +74,24 @@ func _run() -> void:
 	check(not player.timing_readout.get_global_rect().intersects(warning.get_global_rect()) and warning.get_rect().end.y < player.demo_pad.position.y, "Live timing feedback and the warning both fit above the demo grid")
 	player._pause()
 	check(not warning.visible, "Pause hides the warning")
+	check(left_tile.get_shader_parameter("warning_light") == Color.TRANSPARENT, "Pausing clears the reflection along with the warning")
 	player._toggle()
 	check(warning.visible, "Resume restores the warning from the song clock")
+	check(left_tile.get_shader_parameter("warning_light") == warning.self_modulate, "Resume restores the reflection at the current flicker brightness")
 	player.clock.pause()
 	at_beat(player, 10.001)
 	var onset_light := warning.self_modulate.a
 	for beat in [10.4, 10.5, 10.6]:
 		at_beat(player, beat)
 		check(warning.visible and warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "The orange warning holds for the middle 0.2 beats")
+	check(left_tile.get_shader_parameter("warning_light") == TransitionWarning.ORANGE and right_tile.get_shader_parameter("warning_light") == TransitionWarning.ORANGE, "The two upper demo tiles reflect the orange warning together")
 	check(player.demo_pad.accent == GameGrid.VIOLET, "A four-beat response keeps the ordinary demonstration color")
 	at_beat(player, 10.999)
 	check(warning.visible and is_equal_approx(warning.self_modulate.a, onset_light), "The orange warning ends at the mirrored ignition brightness")
 	player.demo_pad.clear()
 	at_beat(player, 11.0)
 	check(not warning.visible, "The orange warning turns off a full beat before the short demo")
+	check(right_tile.get_shader_parameter("warning_light") == Color.TRANSPARENT, "The reflected light goes dark at the start of the gap")
 	check(player.demo_pad.accent == GameGrid.VIOLET and player.demo_pad._glow.count(0.0) == 4 and not player.demo_pad.emphasis, "One beat before a short phrase, the upper grid has no early color, activation, or note flash")
 	check(player.input_pad.accent == GameGrid.TEAL and player.input_pad.emphasis, "The current response stays active until the actual phase boundary")
 	at_beat(player, 12.0)
@@ -93,8 +99,7 @@ func _run() -> void:
 	check(player.demo_pad.accent == GameGrid.CORAL and player.demo_pad._hit_colors[1] == GameGrid.CORAL and player.demo_pad._glow[1] == 1.0, "The first two-beat note flashes red immediately at the boundary")
 	check(player.demo_pad.emphasis and not player.input_pad.emphasis, "Two-beat demonstrations activate only the upper grid")
 	check(not player.stage.find_children("*", "Label", true, false).any(func(label: Label) -> bool: return label.text in ["2박", "다음 2박"]), "Gameplay shows no short-phrase text")
-	var material := player.demo_pad._tiles[0].material as ShaderMaterial
-	check(material.get_shader_parameter("accent") == GameGrid.CORAL, "Runtime phrase color reaches the actual tile shader")
+	check(left_tile.get_shader_parameter("accent") == GameGrid.CORAL, "Runtime phrase color reaches the actual tile shader")
 	await player.hud._transition.finished
 	check(player.hud.accent.is_equal_approx(GameGrid.CORAL) and player.decor.accent.is_equal_approx(GameGrid.CORAL), "The demonstration HUD and stage accents follow the red phrase")
 	at_beat(player, 14.0)
@@ -119,6 +124,7 @@ func _run() -> void:
 	check(warning.visible and warning.self_modulate.a < 1.0, "A two-to-four warning starts on the first response beat")
 	at_beat(player, 18.5)
 	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "The four-beat warning holds steady in violet")
+	check(left_tile.get_shader_parameter("warning_light") == GameGrid.VIOLET and right_tile.get_shader_parameter("warning_light") == GameGrid.VIOLET, "The reverse transition reflects violet on both upper tiles")
 	at_beat(player, 19.0)
 	check(not warning.visible and player.input_pad.emphasis, "The gap begins on the last response beat in the reverse direction")
 	at_beat(player, 19.999)

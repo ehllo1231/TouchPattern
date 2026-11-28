@@ -1,6 +1,8 @@
 class_name TransitionWarning
 extends Control
 
+signal light_changed(light: Color)
+
 const LEAD_BEATS := GuiLayout.WARNING_LEAD_BEATS
 const ORANGE := Color("ff9165")
 const TUBE_MASK := preload("res://assets/ui/transition_warning.svg")
@@ -19,6 +21,7 @@ func _ready() -> void:
 	material = neon
 	resized.connect(queue_redraw)
 	hide()
+	visibility_changed.connect(_publish_light)
 
 
 func configure(layout: GuiLayout, grid: Rect2) -> void:
@@ -42,8 +45,16 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 	var intensity := 1.0
 	if beats_from_edge < edge_beats:
 		intensity = _flicker_intensity(beats_from_edge / edge_beats)
-	self_modulate = Color(accent, intensity)
+	var light := Color(accent, intensity)
+	if self_modulate != light:
+		self_modulate = light
+		if is_visible_in_tree():
+			light_changed.emit(light)
 	show()
+
+
+func _publish_light() -> void:
+	light_changed.emit(self_modulate if is_visible_in_tree() else Color.TRANSPARENT)
 
 
 func _flicker_intensity(t: float) -> float:
