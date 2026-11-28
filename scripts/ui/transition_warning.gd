@@ -9,14 +9,14 @@ const NEON_SHADER := preload("res://scripts/ui/transition_warning.gdshader")
 var flicker_beats := 0.4
 var flicker_depth := 0.65
 var gap_beats := 1.0
-var _neon := ShaderMaterial.new()
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	_neon.shader = NEON_SHADER
-	material = _neon
+	var neon := ShaderMaterial.new()
+	neon.shader = NEON_SHADER
+	material = neon
 	resized.connect(queue_redraw)
 	hide()
 
@@ -39,33 +39,24 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 	var edge_beats := minf(flicker_beats, duration_beats * 0.5)
 	var remaining := duration_beats - elapsed_beats
 	var intensity := 1.0
-	var halo_power := 1.0
-	var core_only := false
 	if elapsed_beats < edge_beats:
-		var t := elapsed_beats / edge_beats
-		# A short strike, one voltage dip, then a decisive ignition and settle.
-		var strike := 0.65 * smoothstep(0.0, 0.10, t) * (1.0 - smoothstep(0.18, 0.32, t))
-		var ignition := 0.8 * smoothstep(0.52, 0.68, t) + 0.2 * smoothstep(0.68, 1.0, t)
-		intensity = lerpf(1.0 - flicker_depth, 1.0, strike + ignition)
-		halo_power = pow(intensity, 5.0)
-	elif remaining < edge_beats and flicker_depth > 0.0:
-		var t := 1.0 - remaining / edge_beats
-		if t < 0.67:
-			# Hold the first interruption long enough to read, then relight the whole tube.
-			var dim := pow(1.0 - flicker_depth, 3.0)
-			intensity = lerpf(1.0, dim, smoothstep(0.03, 0.16, t))
-			intensity += (1.0 - dim) * 0.78 * smoothstep(0.34, 0.44, t)
-			intensity *= 1.0 - smoothstep(0.56, 0.67, t)
-			halo_power = intensity * intensity
-		else:
-			# A shorter, weaker restrike catches only the white center of the tube mask.
-			core_only = true
-			halo_power = 0.0
-			intensity = 0.58 * flicker_depth * smoothstep(0.72, 0.78, t) * (1.0 - smoothstep(0.86, 0.94, t))
-	_neon.set_shader_parameter(&"halo_power", halo_power)
-	_neon.set_shader_parameter(&"core_only", core_only)
+		intensity = _flicker_intensity(elapsed_beats / edge_beats, false)
+	elif remaining < edge_beats:
+		intensity = _flicker_intensity(1.0 - remaining / edge_beats, true)
 	self_modulate = Color(accent, intensity)
 	show()
+
+
+func _flicker_intensity(t: float, already_lit: bool) -> float:
+	var first_light := 0.65 * smoothstep(0.0, 0.10, t)
+	var dim := 1.0 - flicker_depth
+	if already_lit:
+		# Carry the steady light into the dip and keep the tube visible until the final cut.
+		first_light = 1.0
+		dim = maxf(dim, 0.15)
+	var strike := first_light * (1.0 - smoothstep(0.18, 0.32, t))
+	var recovery := 0.8 * smoothstep(0.52, 0.68, t) + 0.2 * smoothstep(0.68, 1.0, t)
+	return lerpf(dim, 1.0, strike + recovery)
 
 
 func _draw() -> void:

@@ -79,26 +79,25 @@ func _run() -> void:
 	editor._process(0.13)
 	var dip := warning.self_modulate.a
 	check(strike < 1.0 and dip < strike and warning.visible, "The initial neon strike briefly dips while the tube remains visible")
-	editor._process(0.30)
+	editor._process(0.10)
+	var recovery := warning.self_modulate.a
+	editor._process(0.20)
 	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "At the preview BPM the orange warning locks at the configured half beat")
 	editor.size_sliders.warning_size.value = 63
 	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
 	editor.size_sliders.warning_size.value = 64
-	editor._process(1.10)
-	var exit_dip := warning.self_modulate.a
-	var neon := warning.material as ShaderMaterial
-	var halo_at_dip := float(neon.get_shader_parameter("halo_power"))
-	editor._process(0.06)
-	check(exit_dip < 0.15 and is_equal_approx(exit_dip, warning.self_modulate.a), "The first cut holds the warning nearly dark")
-	editor._process(0.09)
-	var first_spark := warning.self_modulate.a
-	check(first_spark > exit_dip and float(neon.get_shader_parameter("halo_power")) > halo_at_dip and not neon.get_shader_parameter("core_only"), "The first restrike lights both the tube and its halo")
-	editor._process(0.09)
-	check(is_zero_approx(warning.self_modulate.a), "A second cut separates the two restrikes")
-	editor._process(0.07)
-	check(warning.self_modulate.a > 0.0 and warning.self_modulate.a < first_spark and neon.get_shader_parameter("core_only") and is_zero_approx(float(neon.get_shader_parameter("halo_power"))), "Only the tube core flashes on the weaker final restrike")
-	editor._process(0.08)
-	check(is_zero_approx(warning.self_modulate.a), "The last spark cuts out before the next demo")
+	editor._process(1.07)
+	check(warning.self_modulate.is_equal_approx(TransitionWarning.ORANGE), "Shutdown starts at the steady warning brightness")
+	editor._process(0.13)
+	check(warning.visible and dip > 0.0 and is_equal_approx(warning.self_modulate.a, dip), "Shutdown reaches the same visible dip at the same beat as ignition")
+	editor.size_sliders.warning_flicker_percent.value = 100
+	editor._process(0.0)
+	check(warning.visible and warning.self_modulate.a > 0.0 and warning.self_modulate.a < dip, "Even the deepest shutdown dip leaves the tube lit")
+	editor.size_sliders.warning_flicker_percent.value = 50
+	editor._process(0.10)
+	check(recovery > dip and recovery < 1.0 and is_equal_approx(warning.self_modulate.a, recovery), "Shutdown brightens again at the same rate as ignition")
+	editor._process(0.19)
+	check(warning.visible and warning.self_modulate.a > 0.99, "The warning is bright immediately before the single final cut")
 	editor._process(0.02)
 	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
 	editor._process(1.25)
