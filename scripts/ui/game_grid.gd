@@ -6,6 +6,7 @@ const VIOLET := Color("bb92f5")
 const CORAL := Color("f47668")
 const TEAL := Color("65eee0")
 const STRENGTH := {"PERFECT": 1.0, "GOOD": 0.67, "OK": 0.43, "MISS": 0.32}
+const PAD_ACTIONS := [&"pad_top_left", &"pad_top_right", &"pad_bottom_left", &"pad_bottom_right"]
 
 var accent := VIOLET
 var feedback := TileFeedback.new()
@@ -140,3 +141,13 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 		return
 	super._gui_input(event)
+
+
+func _input(event: InputEvent) -> void:
+	if interactive and event is InputEventJoypadButton and event.pressed:
+		for cell in PAD_ACTIONS.size():
+			if event.is_action_pressed(PAD_ACTIONS[cell]):
+				_emit_cell_press(cell, event)
+				get_viewport().set_input_as_handled()
+				return
+	super._input(event)

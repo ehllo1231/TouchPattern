@@ -2,6 +2,7 @@ class_name PlayerView
 extends Control
 
 signal song_select_requested
+signal manual_hit_confirmed(event: InputEvent)
 
 const KEY_CELLS := {KEY_U: 0, KEY_I: 1, KEY_J: 2, KEY_K: 3}
 const DESIGN_SIZE := Vector2(540, 960)
@@ -22,6 +23,8 @@ var clock := SongClock.new()
 var note_sounds := NoteSounds.new()
 var note_sound_check := CheckBox.new()
 var note_volume: NoteVolumeControl
+var hit_vibration := HitVibration.new()
+var vibration_control: HitVibrationControl
 var preferences_path := "user://settings.cfg"
 var detailed_judgment := false
 var detailed_judgment_check := CheckBox.new()
@@ -70,6 +73,8 @@ func _ready() -> void:
 	settings.load(preferences_path)
 	offset_ms = float(settings.get_value("timing", "offset_ms", 0.0))
 	detailed_judgment = bool(settings.get_value("display", "detailed_judgment", false))
+	hit_vibration.strength_percent = float(settings.get_value("haptics", "strength_percent", 0.0))
+	manual_hit_confirmed.connect(hit_vibration.play)
 	_build_ui()
 	apply_gui_layout(GuiLayout.read(gui_layout_path))
 	if preview_mode:
@@ -110,7 +115,7 @@ func _build_ui() -> void:
 	input_pad.size = demo_pad.size
 	input_pad.accent = GameGrid.TEAL
 	input_pad.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	input_pad.cell_pressed.connect(_press)
+	input_pad.cell_input.connect(_press)
 	stage.add_child(input_pad)
 	timing_readout.name = "DetailedJudgment"
 	timing_readout.position = Vector2(140, 168)
@@ -266,6 +271,8 @@ func _build_settings() -> void:
 	note_volume = NoteVolumeControl.new(note_sounds)
 	note_volume.slider.custom_minimum_size = Vector2(110, 76)
 	sound_row.add_child(note_volume)
+	vibration_control = HitVibrationControl.new(hit_vibration, preferences_path)
+	settings_panel.add_child(vibration_control)
 	var timing_row := HBoxContainer.new()
 	settings_panel.add_child(timing_row)
 	var timing_caption := AppStyle.label("타이밍 보정", 16, AppStyle.MUTED)
@@ -525,13 +532,15 @@ func _prepare_warning(phrases: Array, current: Dictionary) -> void:
 		_warning_accent = TransitionWarning.ORANGE if to_two else GameGrid.VIOLET
 
 
-func _press(cell: int) -> void:
+func _press(cell: int, event: InputEvent = null) -> void:
 	if auto_mode or state != "playing" or _judging_finished:
 		return
 	# Keep the session's early/late window, including taps just before a phase boundary.
 	var result := session.hit(cell, clock.seconds() - offset_ms / 1000.0)
 	if result != "IGNORED":
 		note_sounds.play_input()
+	if result in ["PERFECT", "GOOD", "OK"]:
+		manual_hit_confirmed.emit(event)
 	_update_stats()
 
 
@@ -618,7 +627,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if KEY_CELLS.has(key):
-		_press(int(KEY_CELLS[key]))
+		_press(int(KEY_CELLS[key]), event)
 	elif key == KEY_SPACE:
 		_toggle()
 	elif key == KEY_R:

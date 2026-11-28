@@ -2,6 +2,7 @@ class_name GridPad
 extends Control
 
 signal cell_pressed(cell: int)
+signal cell_input(cell: int, event: InputEvent)
 
 var interactive := false
 var show_keys := false
@@ -62,18 +63,23 @@ func _draw() -> void:
 		draw_string(font, position, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, tint if outline_only or _glow[cell] < 0.5 else AppStyle.BG)
 
 
-func _press_at(position: Vector2) -> void:
+func _emit_cell_press(cell: int, event: InputEvent) -> void:
+	cell_input.emit(cell, event)
+	cell_pressed.emit(cell)
+
+
+func _press_at(position: Vector2, event: InputEvent = null) -> void:
 	if not interactive:
 		return
 	for cell in range(4):
 		if cell_rect(cell).has_point(position):
-			cell_pressed.emit(cell)
+			_emit_cell_press(cell, event)
 			return
 
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_press_at(event.position)
+		_press_at(event.position, event)
 		accept_event()
 
 
@@ -81,5 +87,5 @@ func _input(event: InputEvent) -> void:
 	if interactive and event is InputEventScreenTouch and event.pressed and not event.canceled:
 		var local_position: Vector2 = get_global_transform_with_canvas().affine_inverse() * event.position
 		if Rect2(Vector2.ZERO, size).has_point(local_position):
-			_press_at(local_position)
+			_press_at(local_position, event)
 			get_viewport().set_input_as_handled()
