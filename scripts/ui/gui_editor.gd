@@ -24,7 +24,6 @@ var preview_play_button: Button
 var preview_beat_label := AppStyle.label("", 13, AppStyle.MUTED)
 var preview_beat := 0.0
 var preview_start_beat := 0.0
-var preview_lead_beats := TransitionWarning.LEAD_BEATS
 var title_hint: Label
 var status := AppStyle.label("", 13, AppStyle.MUTED)
 var save_button: Button
@@ -304,7 +303,8 @@ func _prepare_transition_preview() -> void:
 	player_preview.session = null
 	player_preview.transition_warning.hide()
 	player_preview.demo_pad.clear()
-	player_preview.apply_phase_colors("response", TRANSITIONS[direction_select.selected].x)
+	var current: int = TRANSITIONS[direction_select.selected].x
+	player_preview.apply_phase_colors("demo" if current == 1 else "response", current)
 
 
 func _start_transition_preview() -> void:
@@ -325,8 +325,7 @@ func _start_transition_preview() -> void:
 	]}
 	player_preview.session = RhythmSession.new(example)
 	player_preview._set_phase("wait")
-	preview_lead_beats = minf(current, TransitionWarning.LEAD_BEATS)
-	preview_start_beat = boundary - preview_lead_beats
+	preview_start_beat = boundary - TransitionWarning.LEAD_BEATS
 	preview_beat = 0.0
 	player_preview.demo_pad.clear()
 	preview_play_button.disabled = true
@@ -335,7 +334,7 @@ func _start_transition_preview() -> void:
 
 
 func _process(delta: float) -> void:
-	var end_beat := preview_lead_beats + 1.0
+	var end_beat := TransitionWarning.LEAD_BEATS + 1.0
 	preview_beat = minf(preview_beat + delta * preview_bpm.value / 60.0, end_beat)
 	_render_transition()
 	if preview_beat >= end_beat:
@@ -346,14 +345,17 @@ func _process(delta: float) -> void:
 
 func _render_transition() -> void:
 	var was_demo := player_preview.demo_pad.emphasis
+	var previous_phrase := player_preview._visual_phrase
 	# Hold the last demo frame when the upcoming one-beat phrase ends here.
-	var display_beat := minf(preview_beat, preview_lead_beats + 1.0 - 0.000001)
+	var display_beat := minf(preview_beat, TransitionWarning.LEAD_BEATS + 1.0 - 0.000001)
 	var time := TouchChart.beat_to_seconds(player_preview.session.chart, preview_start_beat + display_beat)
 	player_preview._update_phase(time)
-	if player_preview.demo_pad.emphasis and not was_demo:
+	var demo := player_preview.demo_pad.emphasis
+	if demo and (not was_demo or previous_phrase != player_preview._visual_phrase):
 		player_preview.demo_pad.flash(0)
-	var left := ceili(preview_lead_beats - preview_beat)
-	preview_beat_label.text = "플레이 · 다음 시범까지 %d박" % left if left > 0 else "다음 시범 시작"
+	var left := ceili(TransitionWarning.LEAD_BEATS - preview_beat)
+	var phase := "시범" if demo else "플레이"
+	preview_beat_label.text = "%s · 다음 시범까지 %d박" % [phase, left] if left > 0 else "다음 시범 시작"
 
 
 func _change_setting(value: float, key: String) -> void:

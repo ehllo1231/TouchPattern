@@ -268,7 +268,12 @@ func check_palette(editor: GuiEditor) -> void:
 		editor.direction_select.item_selected.emit(i)
 		editor.preview_play_button.pressed.emit()
 		check(editor.player_preview.transition_warning.visible and editor.player_preview.transition_warning.self_modulate.is_equal_approx(saved.demo_color(direction.y)), "Transition %s uses the edited destination color" % direction)
-		editor._process(minf(2.0, direction.x) - 0.125)
+		check(pad.emphasis == (direction.x == 1) and pad.accent.is_equal_approx(saved.demo_color(direction.x)), "Transition %s starts in the correct source phase and color" % direction)
+		var initial_phase := "시범" if direction.x == 1 else "플레이"
+		check(editor.preview_beat_label.text == "%s · 다음 시범까지 2박" % initial_phase, "Transition %s previews the full two-beat lead" % direction)
+		editor._process(1.0)
+		check(editor.preview_beat_label.text == "플레이 · 다음 시범까지 1박" and editor.player_preview.transition_warning.visible, "The warning continues into the final play beat for %s" % direction)
+		editor._process(0.875)
 		check(not editor.player_preview.transition_warning.visible and editor.player_preview.input_pad.emphasis, "Transition %s preserves the gap during play" % direction)
 		editor._process(1.5)
 		check(not editor.is_processing() and pad.emphasis and pad.accent.is_equal_approx(saved.demo_color(direction.y)), "Transition %s ends on the destination demo" % direction)

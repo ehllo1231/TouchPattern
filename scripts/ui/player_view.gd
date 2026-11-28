@@ -31,7 +31,7 @@ var detailed_judgment := false
 var detailed_judgment_check := CheckBox.new()
 var timing_readout := TimingReadout.new()
 var transition_warning := TransitionWarning.new()
-var _next_demo_in_response := INF
+var _next_demo_beat := INF
 var _warning_accent := GameGrid.VIOLET
 var state := "ready"
 var offset_ms := 0.0
@@ -488,11 +488,14 @@ func _on_music_finished() -> void:
 func _update_phase(time: float) -> void:
 	var phase := session.phase_at(time)
 	_set_phase(str(phase.kind), int(phase.index))
-	if is_finite(_next_demo_in_response):
-		# Intersect the warning window with this response, keeping the full gap before the demo.
-		var start := maxf(0.0, _next_demo_in_response - TransitionWarning.LEAD_BEATS)
-		var end := minf(float(session.chart.phrases[_visual_phrase].length_beats), _next_demo_in_response - transition_warning.gap_beats)
-		transition_warning.show_at(float(phase.beat) - start, end - start, _warning_accent)
+	if is_finite(_next_demo_beat):
+		var phrase: Dictionary = session.chart.phrases[_visual_phrase]
+		# Use song beats so the same flicker continues across the demo/response boundary.
+		var beat := TouchChart.seconds_to_beat(session.chart, time)
+		var start := _next_demo_beat - TransitionWarning.LEAD_BEATS
+		var response_end := float(phrase.response_beat) + float(phrase.length_beats)
+		var end := minf(response_end, _next_demo_beat - transition_warning.gap_beats)
+		transition_warning.show_at(beat - start, end - start, _warning_accent)
 
 
 func _set_phase(kind: String, phrase_index: int = -1, refresh: bool = false) -> void:
@@ -502,12 +505,16 @@ func _set_phase(kind: String, phrase_index: int = -1, refresh: bool = false) -> 
 		return
 	_visual_phase = kind
 	_visual_phrase = phrase_index
-	transition_warning.hide()
-	_next_demo_in_response = INF
+	_next_demo_beat = INF
 	var phrases: Array = session.chart.phrases if session != null else []
-	if kind == "response" and phrase_index >= 0:
-		_prepare_warning(phrases, phrases[phrase_index])
-	var length := float(phrases[phrase_index].length_beats) if phrase_index >= 0 and phrase_index < phrases.size() else 4.0
+	var length := 4.0
+	if phrase_index >= 0 and phrase_index < phrases.size():
+		var phrase: Dictionary = phrases[phrase_index]
+		length = float(phrase.length_beats)
+		if kind == "response" or (kind == "demo" and GuiLayout.palette_beats(length) == 1):
+			_prepare_warning(phrases, phrase)
+	if not is_finite(_next_demo_beat):
+		transition_warning.hide()
 	apply_phase_colors(kind, length)
 
 
@@ -522,7 +529,7 @@ func apply_phase_colors(kind: String, length: float) -> void:
 
 func _prepare_warning(phrases: Array, current: Dictionary) -> void:
 	# Charts may store phrases out of time order, or leave rests between them.
-	# Find the next demonstration once when entering this response.
+	# Look up the next demonstration when entering an eligible phase.
 	var length := float(current.length_beats)
 	var response := float(current.response_beat)
 	var next_start := INF
@@ -535,7 +542,7 @@ func _prepare_warning(phrases: Array, current: Dictionary) -> void:
 	var current_beats := GuiLayout.palette_beats(length)
 	var upcoming := GuiLayout.palette_beats(next_length)
 	if current_beats != 0 and upcoming != 0 and current_beats != upcoming:
-		_next_demo_in_response = next_start - response
+		_next_demo_beat = next_start
 		_warning_accent = gui_layout.demo_color(upcoming)
 		# Keep the original amber tube for the stock coral palette.
 		if upcoming == 2 and _warning_accent.is_equal_approx(GameGrid.CORAL):
