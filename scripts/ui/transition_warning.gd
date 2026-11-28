@@ -9,14 +9,14 @@ const NEON_SHADER := preload("res://scripts/ui/transition_warning.gdshader")
 var flicker_beats := 0.4
 var flicker_depth := 0.65
 var gap_beats := 1.0
+var _neon := ShaderMaterial.new()
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	var neon := ShaderMaterial.new()
-	neon.shader = NEON_SHADER
-	material = neon
+	_neon.shader = NEON_SHADER
+	material = _neon
 	resized.connect(queue_redraw)
 	hide()
 
@@ -39,18 +39,24 @@ func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> voi
 	var edge_beats := minf(flicker_beats, duration_beats * 0.5)
 	var remaining := duration_beats - elapsed_beats
 	var intensity := 1.0
+	var halo_power := 1.0
 	if elapsed_beats < edge_beats:
 		var t := elapsed_beats / edge_beats
 		# A short strike, one voltage dip, then a decisive ignition and settle.
 		var strike := 0.65 * smoothstep(0.0, 0.10, t) * (1.0 - smoothstep(0.18, 0.32, t))
 		var ignition := 0.8 * smoothstep(0.52, 0.68, t) + 0.2 * smoothstep(0.68, 1.0, t)
 		intensity = lerpf(1.0 - flicker_depth, 1.0, strike + ignition)
+		halo_power = pow(intensity, 5.0)
 	elif remaining < edge_beats and flicker_depth > 0.0:
 		var t := 1.0 - remaining / edge_beats
-		# One dip and a weaker last spark before the tube goes dark.
-		var dip := smoothstep(0.0, 0.27, t)
-		var spark := 0.72 * smoothstep(0.32, 0.54, t)
-		intensity = (1.0 - flicker_depth * (dip - spark)) * (1.0 - smoothstep(0.58, 1.0, t))
+		# The tube flickers once while the surrounding light fades continuously.
+		var dip := lerpf(0.58, 0.34, flicker_depth)
+		var spark := dip + 0.32 * flicker_depth
+		intensity = lerpf(1.0, dip, smoothstep(0.0, 0.42, t))
+		intensity = lerpf(intensity, spark, smoothstep(0.42, 0.61, t))
+		intensity *= 1.0 - smoothstep(0.61, 1.0, t)
+		halo_power = 1.0 - smoothstep(0.0, 1.0, t)
+	_neon.set_shader_parameter(&"halo_power", halo_power)
 	self_modulate = Color(accent, intensity)
 	show()
 

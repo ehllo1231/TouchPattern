@@ -84,12 +84,16 @@ func _run() -> void:
 	editor.size_sliders.warning_size.value = 63
 	check(warning.size.x == 63 and editor.preview_beat == 0.5, "Live edits preserve the current playhead")
 	editor.size_sliders.warning_size.value = 64
-	editor._process(1.15)
+	editor._process(1.21)
 	var exit_dip := warning.self_modulate.a
-	editor._process(0.13)
+	var neon := warning.material as ShaderMaterial
+	var halo_at_dip := float(neon.get_shader_parameter("halo_power"))
+	editor._process(0.095)
 	var last_spark := warning.self_modulate.a
-	editor._process(0.20)
+	var halo_at_spark := float(neon.get_shader_parameter("halo_power"))
+	editor._process(0.175)
 	check(warning.visible and warning.self_modulate.a < exit_dip and exit_dip < last_spark and last_spark < 1.0, "Before the demo the orange neon dips, sparks once, then fades out")
+	check(1.0 > halo_at_dip and halo_at_dip > halo_at_spark and halo_at_spark > float(neon.get_shader_parameter("halo_power")), "The surrounding glow keeps fading through the tube's last flicker")
 	editor._process(0.03)
 	check(not warning.visible and editor.player_preview.demo_pad.emphasis and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Two preview beats end on the actual short demonstration")
 	editor._process(1.25)

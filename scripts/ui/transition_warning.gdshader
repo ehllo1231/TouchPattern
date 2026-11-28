@@ -1,6 +1,7 @@
 shader_type canvas_item;
 render_mode unshaded;
 
+uniform float halo_power = 1.0;
 varying vec4 lamp;
 const vec2 CORNERS[4] = {vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0)};
 
@@ -20,7 +21,7 @@ void fragment() {
 		wide_glow += 0.25 * textureLod(TEXTURE, UV + offset * 11.0, 4.8).a;
 	}
 	float power = lamp.a;
-	float halo = min(0.82, close_glow * 1.15 + wide_glow * 0.95) * pow(power, 5.0);
+	float halo = min(0.82, close_glow * 1.15 + wide_glow * 0.95) * halo_power;
 	// The center stays legible through the dip; the color spill blooms at lock-on.
 	float tube = mask.a * power;
 	float alpha = tube + (1.0 - tube) * halo;
