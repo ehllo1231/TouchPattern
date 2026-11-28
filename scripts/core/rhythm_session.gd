@@ -10,6 +10,7 @@ const WINDOW := 0.150
 var chart: Dictionary
 var start_beat := -INF
 var end_beat := 0.0
+var phrase_indices: Array[int] = []
 var notes: Array[Dictionary] = []
 var score := 0
 var combo := 0
@@ -18,12 +19,14 @@ var resolved := 0
 var counts: Dictionary = {"PERFECT": 0, "GOOD": 0, "OK": 0, "MISS": 0}
 
 
-func _init(data: Dictionary, from_beat: float = -INF) -> void:
+func _init(data: Dictionary, from_beat: float = -INF, only_phrase: int = -1) -> void:
 	chart = data
 	start_beat = from_beat
-	for phrase in chart.phrases:
-		if float(phrase.show_beat) < start_beat:
+	for index in chart.phrases.size():
+		var phrase: Dictionary = chart.phrases[index]
+		if float(phrase.show_beat) < start_beat or (only_phrase >= 0 and index != only_phrase):
 			continue
+		phrase_indices.append(index)
 		end_beat = maxf(end_beat, float(phrase.response_beat) + float(phrase.length_beats))
 		for note in phrase.notes:
 			notes.append({"time": TouchChart.beat_to_seconds(chart, float(phrase.response_beat) + float(note.beat)), "cell": int(note.cell), "done": false})
@@ -83,10 +86,8 @@ func accuracy() -> float:
 
 func phase_at(song_seconds: float) -> Dictionary:
 	var beat := TouchChart.seconds_to_beat(chart, song_seconds)
-	for index in range(chart.phrases.size()):
+	for index in phrase_indices:
 		var phrase: Dictionary = chart.phrases[index]
-		if float(phrase.show_beat) < start_beat:
-			continue
 		var length := float(phrase.length_beats)
 		for kind in ["demo", "response"]:
 			var start := float(phrase.show_beat if kind == "demo" else phrase.response_beat)
@@ -97,9 +98,8 @@ func phase_at(song_seconds: float) -> Dictionary:
 
 func demos_between(from_seconds: float, to_seconds: float) -> Array[int]:
 	var cells: Array[int] = []
-	for phrase in chart.phrases:
-		if float(phrase.show_beat) < start_beat:
-			continue
+	for index in phrase_indices:
+		var phrase: Dictionary = chart.phrases[index]
 		for note in phrase.notes:
 			var time := TouchChart.beat_to_seconds(chart, float(phrase.show_beat) + float(note.beat))
 			if time > from_seconds and time <= to_seconds:

@@ -22,8 +22,7 @@ func _ready() -> void:
 		_replace_view(GuiEditor.new())
 	elif args.has("--chart-maker"):
 		get_tree().root.content_scale_size = Vector2i(480, 900)
-		DisplayServer.window_set_min_size(Vector2i(1000, 740))
-		DisplayServer.window_set_size(Vector2i(1100, 900))
+		get_window().size = Vector2i(1100, 900)
 		var maker := ChartMaker.new()
 		maker.initial_path = chart_path
 		maker.remember_recent_chart = true

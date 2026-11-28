@@ -20,7 +20,7 @@ var chart_path := ""
 var chart: Dictionary = {}
 var stream: AudioStream
 var session: RhythmSession
-var clock := SongClock.new()
+var clock: SongClock
 var note_sounds := NoteSounds.new()
 var note_sound_check := CheckBox.new()
 var note_volume: NoteVolumeControl
@@ -66,8 +66,10 @@ var open_dialog := FileDialog.new()
 
 
 func _ready() -> void:
-	add_child(clock)
-	clock.player.finished.connect(_on_music_finished)
+	if clock == null:
+		clock = SongClock.new()
+		add_child(clock)
+		clock.player.finished.connect(_on_music_finished)
 	add_child(note_sounds)
 	var settings := ConfigFile.new()
 	settings.load(preferences_path)
@@ -353,11 +355,11 @@ func _load_chart(path: String, from_phrase: int = -1) -> void:
 	_show_menu()
 
 
-func _reset_session() -> void:
+func _reset_session(listening_session: RhythmSession = null) -> void:
 	note_sounds.stop()
 	_judging_finished = false
 	_music_finished = false
-	session = RhythmSession.new(chart, _session_start_beat)
+	session = listening_session if listening_session != null else RhythmSession.new(chart, _session_start_beat)
 	session.judged.connect(_judged)
 	demo_pad.visuals_paused = false
 	input_pad.visuals_paused = false
@@ -442,18 +444,8 @@ func _process(_delta: float) -> void:
 	if not _music_finished and clock.audio_finished() and time >= _music_end_seconds():
 		_music_finished = true
 	if not _judging_finished:
-		# Select the phrase color before its very first demonstration flash.
-		_update_phase(time)
+		_advance_gameplay(time)
 		var judge_time := time if auto_mode else time - offset_ms / 1000.0
-		if auto_mode:
-			session.auto_play(time)
-		else:
-			session.advance(judge_time)
-		for cell in session.demos_between(_last_time, time):
-			demo_pad.flash(cell)
-			note_sounds.play_demo()
-		_last_time = time
-		_update_stats()
 		var end_seconds := TouchChart.beat_to_seconds(chart, session.end_beat)
 		if judge_time > end_seconds + RhythmSession.WINDOW:
 			# Seal the result at the original judgment deadline, then let the
@@ -467,6 +459,21 @@ func _process(_delta: float) -> void:
 	# judgment grace period, including silent chart time and timing compensation.
 	if _judging_finished and _music_finished and time >= _run_end_seconds():
 		_finish()
+
+
+func _advance_gameplay(time: float) -> void:
+	# Select the phrase color before its very first demonstration flash.
+	_update_phase(time)
+	if auto_mode:
+		session.auto_play(time)
+	else:
+		session.advance(time - offset_ms / 1000.0)
+	for cell in session.demos_between(_last_time, time):
+		demo_pad.flash(cell)
+		if not preview_mode:
+			note_sounds.play_demo()
+	_last_time = time
+	_update_stats()
 
 
 func _run_end_seconds() -> float:
@@ -554,7 +561,7 @@ func _press(cell: int, event: InputEvent = null) -> void:
 		return
 	# Keep the session's early/late window, including taps just before a phase boundary.
 	var result := session.hit(cell, clock.seconds() - offset_ms / 1000.0)
-	if result != "IGNORED":
+	if result != "IGNORED" and not preview_mode:
 		note_sounds.play_input()
 	if result in ["PERFECT", "GOOD", "OK"]:
 		manual_hit_confirmed.emit(event)
@@ -562,7 +569,7 @@ func _press(cell: int, event: InputEvent = null) -> void:
 
 
 func _judged(kind: String, cell: int, error_ms: float) -> void:
-	if auto_mode and kind in ["PERFECT", "GOOD", "OK"]:
+	if auto_mode and not preview_mode and kind in ["PERFECT", "GOOD", "OK"]:
 		note_sounds.play_input()
 	input_pad.show_judgment(cell, kind)
 	if detailed_judgment:
@@ -645,6 +652,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if KEY_CELLS.has(key):
 		_press(int(KEY_CELLS[key]), event)
+	elif preview_mode:
+		return
 	elif key == KEY_SPACE:
 		_toggle()
 	elif key == KEY_R:
@@ -657,7 +666,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "playing":
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "playing" and not preview_mode:
 		_pause()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN and is_node_ready() and not preview_mode:
 		apply_gui_layout(GuiLayout.read(gui_layout_path))

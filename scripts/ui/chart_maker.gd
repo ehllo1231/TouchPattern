@@ -24,7 +24,8 @@ var note_sound_check := CheckBox.new()
 var note_volume: NoteVolumeControl
 var timeline := PatternTimeline.new()
 var preview_pad := GridPad.new()
-var play_from_selection_check := CheckBox.new()
+var playtest_window := Window.new()
+var playtest := preload("res://scripts/ui/chart_playtest.gd").new()
 var auto_mode_check := CheckBox.new()
 var title_edit := LineEdit.new()
 var bpm_spin := SpinBox.new()
@@ -51,11 +52,12 @@ var _preview_session: RhythmSession
 
 
 func _ready() -> void:
-	DisplayServer.window_set_min_size(Vector2i(960, 740))
+	get_window().min_size = Vector2i(960, 740)
 	get_tree().auto_accept_quit = false
 	add_child(clock)
 	add_child(note_sounds)
 	_build_ui()
+	_build_playtest_window()
 	var startup_path := initial_path
 	if restore_recent_chart:
 		var recent_path := _recent_chart_path()
@@ -64,6 +66,46 @@ func _ready() -> void:
 	if not _load_chart(startup_path) and startup_path != TouchChart.SAMPLE:
 		_load_chart(TouchChart.SAMPLE)
 		_status("최근 채보를 열 수 없어 기본 채보를 열었어요. 파일 위치를 확인해 주세요.", true)
+
+
+func _build_playtest_window() -> void:
+	playtest_window.title = "플레이테스트 · 듣기 대기"
+	playtest_window.visible = false
+	playtest_window.force_native = DisplayServer.has_feature(DisplayServer.FEATURE_SUBWINDOWS)
+	playtest_window.min_size = Vector2i(240, 360)
+	playtest_window.size = Vector2i(360, 640)
+	playtest_window.theme = AppStyle.make_theme()
+	add_child(playtest_window)
+	playtest.clock = clock
+	playtest.preferences_path = preferences_path
+	playtest_window.add_child(playtest)
+	playtest.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	auto_mode_check.toggled.connect(playtest.set_auto)
+	playtest_window.close_requested.connect(playtest_window.hide)
+	if playtest_window.force_native:
+		_place_playtest_beside_editor()
+	playtest_window.show()
+	if playtest_window.force_native:
+		get_window().grab_focus()
+
+
+func _place_playtest_beside_editor() -> void:
+	var host := get_window()
+	var work := DisplayServer.screen_get_usable_rect(host.current_screen)
+	var gap := 16
+	var editor_space := work.size.x - playtest_window.min_size.x - gap * 3
+	if host.mode == Window.MODE_WINDOWED and editor_space >= host.min_size.x:
+		host.size.x = mini(host.size.x, editor_space)
+	var height := mini(720, work.size.y - 64)
+	var width := clampi(work.size.x - host.size.x - gap * 3, 240, roundi(height * 9.0 / 16.0))
+	playtest_window.size = Vector2i(width, mini(height, roundi(width * 16.0 / 9.0)))
+	var x := host.position.x + host.size.x + gap
+	if x + width > work.end.x - gap:
+		x = host.position.x - width - gap
+		if x < work.position.x + gap:
+			host.position.x = maxi(work.position.x + gap, work.end.x - host.size.x - width - gap * 2)
+			x = mini(host.position.x + host.size.x + gap, work.end.x - width - gap)
+	playtest_window.position = Vector2i(x, clampi(host.position.y, work.position.y + 36, work.end.y - playtest_window.size.y - gap))
 
 
 func _build_ui() -> void:
@@ -81,7 +123,10 @@ func _build_ui() -> void:
 	var edition := AppStyle.label("CHART MAKER", 13, AppStyle.MUTED)
 	edition.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(edition)
-	header.add_child(AppStyle.button("플레이어 열기 ↗", _open_player))
+	header.add_child(AppStyle.button("플레이어 창 보기", func() -> void:
+		playtest_window.show()
+		playtest_window.grab_focus()
+	))
 	var toolbar := HBoxContainer.new()
 	root.add_child(toolbar)
 	toolbar.add_child(AppStyle.button("새 채보", func() -> void: _confirm_discard(_new_chart)))
@@ -229,13 +274,6 @@ func _build_ui() -> void:
 	transport.add_child(note_sound_check)
 	note_volume = NoteVolumeControl.new(note_sounds)
 	transport.add_child(note_volume)
-	transport.add_child(AppStyle.button("플레이 테스트 ↗", _play_test))
-	play_from_selection_check.text = "선택 구간부터"
-	play_from_selection_check.button_pressed = true
-	play_from_selection_check.focus_mode = Control.FOCUS_NONE
-	play_from_selection_check.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	play_from_selection_check.tooltip_text = "체크하면 선택한 패턴의 시범 시작 한 박자 전부터, 해제하면 곡 처음부터 테스트해요."
-	transport.add_child(play_from_selection_check)
 	auto_mode_check.text = "AUTO"
 	auto_mode_check.focus_mode = Control.FOCUS_NONE
 	auto_mode_check.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -316,7 +354,7 @@ func _load_chart(path: String) -> bool:
 	dirty = false
 	_refresh()
 	_remember_chart(path)
-	_status("채보를 열었어요. 노트를 편집하거나 플레이 테스트를 눌러 보세요.")
+	_status("채보를 열었어요. 구간 듣기나 연속 듣기를 누르면 옆 창에서 플레이테스트가 시작돼요.")
 	return true
 
 
@@ -572,13 +610,6 @@ func _exit_tree() -> void:
 		_bpm_thread.wait_to_finish()
 
 
-func _open_player() -> void:
-	if chart_path.is_empty():
-		_play_test()
-	elif AppStyle.launch(chart_path) < 0:
-		_status("플레이어 창을 열 수 없어요.", true)
-
-
 func _save() -> void:
 	if chart_path.is_empty() or chart_path.begins_with("res://") or not FileAccess.file_exists(chart_path):
 		_save_as()
@@ -630,8 +661,8 @@ func _save_to(path: String) -> void:
 	_status("저장했어요: " + ProjectSettings.globalize_path(path))
 
 
-func _audio_for_preview(require_notes: bool = true) -> AudioStream:
-	var error := TouchChart.validate(chart, require_notes)
+func _audio_for_preview() -> AudioStream:
+	var error := TouchChart.validate(chart, false)
 	if not error.is_empty():
 		_status(error, true)
 		return null
@@ -644,17 +675,19 @@ func _audio_for_preview(require_notes: bool = true) -> AudioStream:
 
 func _listen(continuous: bool = false) -> void:
 	_stop_preview()
-	var audio := _audio_for_preview(false)
+	var audio := _audio_for_preview()
 	if audio == null:
 		return
 	var phrase: Dictionary = chart.phrases[selected]
 	_preview_continuous = continuous
 	_preview_follow_from = TouchChart.beat_to_seconds(chart, float(phrase.show_beat))
-	var end_beat := TouchChart.end_beat(chart) if continuous else float(phrase.response_beat) + float(phrase.length_beats)
-	_preview_end = TouchChart.beat_to_seconds(chart, end_beat)
+	_preview_session = RhythmSession.new(chart, float(phrase.show_beat), -1 if continuous else selected)
+	_preview_end = TouchChart.beat_to_seconds(chart, _preview_session.end_beat)
 	var start := maxf(0.0, TouchChart.beat_to_seconds(chart, float(phrase.show_beat) - 1.0))
-	_preview_session = RhythmSession.new(chart)
 	_prepare_preview_sounds()
+	playtest_window.show()
+	playtest_window.title = "플레이테스트 · %s" % str(chart.title)
+	playtest.begin(_preview_session, start, _preview_end)
 	clock.start(audio, start, TouchChart.audio_end_seconds(chart, audio.get_length()), TouchChart.audio_fade_out_seconds(chart, audio.get_length()))
 	_update_preview(clock.seconds())
 
@@ -662,9 +695,9 @@ func _listen(continuous: bool = false) -> void:
 func _prepare_preview_sounds() -> void:
 	_preview_sound_times.clear()
 	_preview_sound_cursor = 0
-	var phrases: Array = chart.phrases if _preview_continuous else [chart.phrases[selected]]
 	var first_time := maxf(0.0, _preview_follow_from)
-	for phrase in phrases:
+	for index in _preview_session.phrase_indices:
+		var phrase: Dictionary = chart.phrases[index]
 		for start_beat in [float(phrase.show_beat), float(phrase.response_beat)]:
 			for note in phrase.notes:
 				var time := TouchChart.beat_to_seconds(chart, start_beat + float(note.beat))
@@ -682,6 +715,10 @@ func _play_preview_sounds(time: float) -> void:
 
 
 func _stop_preview(stop_feedback: bool = true) -> void:
+	if clock.running and _preview_session != null:
+		playtest.advance_to(minf(clock.seconds(), _preview_end))
+	playtest.stop_listening()
+	playtest_window.title = "플레이테스트 · 듣기 대기"
 	clock.stop()
 	if stop_feedback:
 		note_sounds.stop()
@@ -694,24 +731,6 @@ func _stop_preview(stop_feedback: bool = true) -> void:
 	preview_pad.clear()
 	if preview_label != null:
 		preview_label.text = PREVIEW_HINT
-
-
-func _play_test() -> void:
-	_stop_preview()
-	if _audio_for_preview() == null:
-		return
-	var temporary := "user://previews/editor_preview_%d.json" % Time.get_ticks_usec()
-	var error := TouchChart.write(chart, chart_path, temporary)
-	if not error.is_empty():
-		_status(error, true)
-		return
-	var start_phrase := selected if play_from_selection_check.button_pressed else -1
-	if AppStyle.launch(temporary, false, true, start_phrase, auto_mode_check.button_pressed) < 0:
-		_status("플레이 테스트 창을 열 수 없어요.", true)
-	else:
-		var start_label := "선택한 패턴" if start_phrase >= 0 else "곡 처음"
-		var mode_label := "PC 시범 플레이" if auto_mode_check.button_pressed else "플레이 테스트"
-		_status("%s부터 %s 중이에요. 저장 파일은 그대로예요." % [start_label, mode_label])
 
 
 func _process(_delta: float) -> void:
@@ -728,6 +747,7 @@ func _process(_delta: float) -> void:
 
 
 func _update_preview(time: float) -> void:
+	playtest.advance_to(time)
 	_play_preview_sounds(time)
 	preview_pad.clear()
 	timeline.preview_highlights.clear()
