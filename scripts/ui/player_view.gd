@@ -122,7 +122,7 @@ func _build_ui() -> void:
 	timing_readout.size = Vector2(260, 60)
 	stage.add_child(timing_readout)
 	stage.add_child(transition_warning)
-	transition_warning.light_changed.connect(_set_warning_reflection)
+	transition_warning.light_changed.connect(demo_pad.set_warning_reflection)
 	transition_warning.visibility_changed.connect(_position_timing_readout)
 	hud.name = "HUD"
 	hud.size = Vector2(540, 160)
@@ -523,15 +523,8 @@ func apply_phase_colors(kind: String, length: float) -> void:
 	demo_pad.set_accent(demo_accent)
 	demo_pad.set_active(kind == "demo")
 	input_pad.set_active(kind == "response")
-	# A steady warning can span the downbeat without emitting another light change.
-	if transition_warning.is_visible_in_tree():
-		_set_warning_reflection(transition_warning.self_modulate)
 	decor.set_phase(kind, demo_accent)
 	hud.set_phase(kind, demo_accent)
-
-
-func _set_warning_reflection(light: Color) -> void:
-	demo_pad.set_warning_reflection(light if input_pad.emphasis else Color.TRANSPARENT)
 
 
 func _prepare_warning(phrases: Array, current: Dictionary) -> void:

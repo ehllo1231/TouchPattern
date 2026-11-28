@@ -43,6 +43,8 @@ void fragment() {
 		float from_inner_edge = 0.5 + (reflect_from_right ? -p.x : p.x) / tile_size.x;
 		vec2 offset = vec2((from_inner_edge - 0.10) / 0.36, vertical / 0.16);
 		float spill = exp(-dot(offset, offset)) * warning_light.a * warning_light.a;
+		// A lit note covers the reflection on this tile; reveal it as the note fades.
+		spill *= 1.0 - smoothstep(0.0, 0.5, flash);
 		surface += warning_light.rgb * spill * (0.15 + 0.32 * inner_light);
 		edge = mix(edge, mix(warning_light.rgb, vec3(1.0), 0.58), spill);
 	}

@@ -270,7 +270,9 @@ func check_palette(editor: GuiEditor) -> void:
 		check(editor.player_preview.transition_warning.visible and editor.player_preview.transition_warning.self_modulate.is_equal_approx(saved.demo_color(direction.y)), "Transition %s uses the edited destination color" % direction)
 		check(pad.emphasis == (direction.x == 1) and pad.accent.is_equal_approx(saved.demo_color(direction.x)), "Transition %s starts in the correct source phase and color" % direction)
 		if direction.x == 1:
-			check(material.get_shader_parameter("warning_light") == Color.TRANSPARENT, "The one-beat preview shows the warning without a tile reflection for %s" % direction)
+			check(material.get_shader_parameter("warning_light") == editor.player_preview.transition_warning.self_modulate and material.get_shader_parameter("flash") == 0.0, "The idle upper tile receives the warning light during the one-beat preview for %s" % direction)
+			if DisplayServer.get_name() != "headless":
+				await check_rendered_reflection(editor)
 		var initial_phase := "시범" if direction.x == 1 else "플레이"
 		check(editor.preview_beat_label.text == "%s · 다음 시범까지 2박" % initial_phase, "Transition %s previews the full two-beat lead" % direction)
 		editor._process(1.0)
@@ -286,3 +288,32 @@ func check_palette(editor: GuiEditor) -> void:
 	editor.screen_select.item_selected.emit(0)
 	editor.reset_button.pressed.emit()
 	check(pad.accent == defaults[2] and editor.layout.two_beat_color == defaults[1] and editor.layout.four_beat_color == defaults[0] and editor.unsaved, "Reset restores all three default colors in the game preview")
+
+
+func check_rendered_reflection(editor: GuiEditor) -> void:
+	var pad := editor.player_preview.demo_pad
+	var light := editor.player_preview.transition_warning.self_modulate
+	var viewport := editor.preview_viewport
+	var points: Array[Vector2i] = []
+	for cell in range(2):
+		var rect := pad.cell_rect(cell)
+		var point := rect.position + rect.size * Vector2(0.82 if cell == 0 else 0.18, 0.05)
+		points.append(Vector2i(pad.get_global_transform_with_canvas() * point))
+	# Compare the same pixel with and without the lamp's contribution at each note brightness.
+	editor.set_process(false)
+	pad.visuals_paused = true
+	var reflected: Array[float] = []
+	for strength: float in [1.0, 0.25, 0.0]:
+		pad.flash(0, false, strength)
+		pad.set_warning_reflection(light)
+		await RenderingServer.frame_post_draw
+		var lit := viewport.get_texture().get_image()
+		pad.set_warning_reflection(Color.TRANSPARENT)
+		await RenderingServer.frame_post_draw
+		var dark := viewport.get_texture().get_image()
+		reflected.append(lit.get_pixelv(points[0]).get_luminance() - dark.get_pixelv(points[0]).get_luminance())
+		check(lit.get_pixelv(points[1]) != dark.get_pixelv(points[1]), "The neighboring idle tile keeps its reflection at note strength %s" % strength)
+	check(reflected[0] == 0.0 and reflected[0] < reflected[1] and reflected[1] < reflected[2], "The note completely covers the reflection at its peak and reveals it as it fades")
+	pad.set_warning_reflection(light)
+	pad.visuals_paused = false
+	editor.set_process(true)
