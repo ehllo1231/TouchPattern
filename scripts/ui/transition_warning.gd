@@ -1,13 +1,14 @@
 class_name TransitionWarning
 extends Control
 
-const LEAD_BEATS := 2.0
+const LEAD_BEATS := GuiLayout.WARNING_LEAD_BEATS
 const ORANGE := Color("ff9165")
 const TUBE_MASK := preload("res://assets/ui/transition_warning.svg")
 const NEON_SHADER := preload("res://scripts/ui/transition_warning.gdshader")
 
-var flicker_beats := 0.35
+var flicker_beats := 0.4
 var flicker_depth := 0.65
+var gap_beats := 1.0
 
 
 func _ready() -> void:
@@ -25,9 +26,12 @@ func configure(layout: GuiLayout, grid: Rect2) -> void:
 	position = Vector2(grid.get_center().x - size.x / 2.0, maxf(144.0, grid.position.y - size.y - 18.0))
 	flicker_beats = layout.warning_flicker_beats
 	flicker_depth = layout.warning_flicker_percent / 100.0
+	gap_beats = layout.warning_gap_beats
 
 
-func show_at(elapsed_beats: float, duration_beats: float, accent: Color) -> void:
+func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> void:
+	# The gap is measured back from the next demo, including any chart rest.
+	var duration_beats := minf(available_beats, LEAD_BEATS - gap_beats)
 	if elapsed_beats < 0.0 or elapsed_beats >= duration_beats:
 		hide()
 		return

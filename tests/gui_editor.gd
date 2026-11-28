@@ -69,6 +69,7 @@ func _run() -> void:
 	editor.size_sliders.warning_size.value = 64
 	editor.size_spins.warning_flicker_beats.value = 0.5
 	editor.size_spins.warning_flicker_percent.value = 50
+	editor.size_spins.warning_gap_beats.value = 0
 	editor.preview_bpm.value = 60
 	check(editor.unsaved and warning.size.x == 64 and not editor.is_processing() and not warning.visible, "Editing the glyph or tempo does not start a preview")
 	editor.preview_play_button.pressed.emit()
@@ -100,21 +101,32 @@ func _run() -> void:
 	editor.direction_select.select(1)
 	editor.direction_select.item_selected.emit(1)
 	check(not editor.is_processing() and not warning.visible and not editor.preview_play_button.disabled, "Changing direction during playback returns to ready")
+	editor.size_sliders.warning_gap_beats.value = 0.75
 	editor.preview_play_button.pressed.emit()
-	editor._process(0.75)
+	editor._process(0.60)
 	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET) and editor.player_preview.demo_pad.accent == GameGrid.CORAL, "Reverse preview shows a violet warning during the short pattern's response")
+	editor._process(0.65)
+	check(not warning.visible and editor.player_preview.input_pad.emphasis, "The preview enters the edited gap while the response is still active")
 	editor._save()
 	player._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
 	check(player.transition_warning.size.x == 64 and player.transition_warning.flicker_beats == 0.5 and player.transition_warning.flicker_depth == 0.5, "Saved editor animation settings also reach a running game")
+	check(player.transition_warning.gap_beats == 0.75, "The running game reloads the saved warning gap")
 	editor.size_sliders.warning_flicker_beats.value = 0
 	editor._process(3.0)
 	editor.preview_play_button.pressed.emit()
 	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length leaves a steady warning from onset on replay")
-	editor._process(1.95)
-	check(warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length also skips the shutdown animation")
+	editor._process(1.24)
+	check(warning.visible and warning.self_modulate.is_equal_approx(GameGrid.VIOLET), "Zero flicker length keeps the light steady until the gap")
+	editor._process(0.02)
+	check(not warning.visible, "The gap also applies with flicker disabled")
+	editor.size_sliders.warning_gap_beats.value = TransitionWarning.LEAD_BEATS
+	editor._process(3.0)
+	editor.preview_play_button.pressed.emit()
+	check(not warning.visible and editor.player_preview.input_pad.emphasis, "A two-beat gap leaves the whole warning window dark")
 	editor._process(3.0)
 	editor.reset_button.pressed.emit()
 	check(warning.size.x == 48.0 and editor.layout.play_grid_size == 320 and not editor.is_processing(), "Reset restores the transition settings without starting playback")
+	check(editor.size_spins.warning_gap_beats.value == 1.0 and editor.size_spins.warning_flicker_beats.value == 0.4, "Reset restores the one-beat gap and 0.4-beat flickers")
 	editor.preview_play_button.pressed.emit()
 	editor.screen_select.select(0)
 	editor.screen_select.item_selected.emit(0)

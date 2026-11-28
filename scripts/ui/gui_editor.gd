@@ -148,6 +148,7 @@ func _build_transition_settings() -> void:
 	_add_control(transition_settings, "warning_size", "느낌표 크기", AppStyle.TEXT, 24, 64, 1, "px")
 	_add_control(transition_settings, "warning_flicker_beats", "깜빡임 길이", AppStyle.TEXT, 0, 1, 0.05, "박")
 	_add_control(transition_settings, "warning_flicker_percent", "깜빡임 강도", AppStyle.TEXT, 0, 100, 1, "%")
+	_add_control(transition_settings, "warning_gap_beats", "시범 전 소등 간격", AppStyle.TEXT, 0, TransitionWarning.LEAD_BEATS, 0.05, "박")
 	transition_settings.add_child(HSeparator.new())
 	var row := HBoxContainer.new()
 	transition_settings.add_child(row)
