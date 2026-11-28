@@ -96,6 +96,12 @@ func flash(cell: int, failed: bool = false, strength: float = 1.0) -> void:
 	set_process(true)
 
 
+func hold_preview_note(cell: int) -> void:
+	_activation = 1.0
+	flash(cell, false, 0.94)
+	set_process(false)
+
+
 func show_judgment(cell: int, kind: String) -> void:
 	if cell < 0 or cell > 3 or not STRENGTH.has(kind):
 		return

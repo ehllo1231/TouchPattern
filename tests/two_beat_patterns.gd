@@ -165,6 +165,33 @@ func _run() -> void:
 	check(warning.visible and is_equal_approx(warning.self_modulate.a, spaced_onset_light), "A shortened warning also mirrors ignition before the rest")
 	player._update_phase(TouchChart.beat_to_seconds(spaced, 12.0))
 	check(not warning.visible, "There is no lingering warning during a rest")
+	var one_beat := mixed_chart()
+	one_beat.phrases = [one_beat.phrases[0],
+		{"show_beat": 12.0, "response_beat": 13.0, "length_beats": 1.0, "notes": [{"beat": 0.0, "cell": 1}]},
+		{"show_beat": 14.0, "response_beat": 16.0, "length_beats": 2.0, "notes": [{"beat": 0.0, "cell": 2}]}]
+	check(TouchChart.write(one_beat, TouchChart.SAMPLE, fixture_path).is_empty(), "One-beat notes use the same chart format")
+	player._load_chart(fixture_path)
+	player._start()
+	player.clock.pause()
+	at_beat(player, 10.5)
+	check(warning.visible and warning.self_modulate == Color("#d9698b"), "The next one-beat phrase is announced in raspberry red")
+	at_beat(player, 12.0)
+	check(not warning.visible and player.demo_pad._hit_colors[1] == Color("#d9698b") and player.demo_pad._glow[1] == 1.0, "The very first note of a one-beat demo flashes raspberry")
+	var custom := GuiLayout.new()
+	custom.one_beat_color = Color("#ba5349")
+	custom.two_beat_color = Color("#ed9d62")
+	custom.warning_gap_beats = 0.25
+	player.gui_layout_path = "user://tests/one_beat_layout_%d.tres" % OS.get_process_id()
+	check(ResourceSaver.save(custom, player.gui_layout_path) == OK, "Custom beat colors save to a layout")
+	player._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
+	check(player.demo_pad.accent.is_equal_approx(custom.one_beat_color), "Focus reload refreshes the current one-beat phase immediately")
+	at_beat(player, 13.375)
+	check(warning.visible and warning.self_modulate.is_equal_approx(custom.two_beat_color) and player.input_pad.emphasis, "The short response warns in the saved two-beat color")
+	at_beat(player, 13.75)
+	check(not warning.visible, "One-beat responses leave exactly the configured gap")
+	at_beat(player, 14.0)
+	check(not warning.visible and player.demo_pad._hit_colors[2].is_equal_approx(custom.two_beat_color), "The next demo uses its saved color at its first note")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(player.gui_layout_path))
 	player.queue_free()
 	await process_frame
 	var maker := ChartMaker.new()

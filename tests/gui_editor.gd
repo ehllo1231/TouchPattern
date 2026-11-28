@@ -213,6 +213,8 @@ func _run() -> void:
 	check(invalid.demo_grid_size == 260 and invalid.play_grid_size == 320, "Invalid and out-of-range resource values stay within usable limits")
 	invalid.play_grid_size = -20
 	check(invalid.play_grid_size == 180, "A negative size cannot create an unusable touch target")
+	reopened.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	await check_palette(reopened)
 	editor.queue_free()
 	reopened.queue_free()
 	await process_frame
@@ -220,3 +222,59 @@ func _run() -> void:
 	await create_timer(0.15).timeout
 	print("GUI editor: %d checks, %d failures" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)
+
+
+func check_palette(editor: GuiEditor) -> void:
+	var pad := editor.player_preview.demo_pad
+	var defaults := [GameGrid.VIOLET, GameGrid.CORAL, Color("#d9698b")]
+	var chosen := [Color("#928ef0"), Color("#e98754"), Color("#de7594")]
+	for index in range(3):
+		editor.beat_select.select(index)
+		editor.beat_select.item_selected.emit(index)
+		check(editor.color_button.color == defaults[index] and pad.accent == defaults[index] and not editor.unsaved, "Selecting each beat previews its default without an edit")
+	var material := pad._tiles[1].material as ShaderMaterial
+	await process_frame
+	for pressed in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.position = editor.color_button.get_global_rect().get_center()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = pressed
+		Input.parse_input_event(click)
+		await process_frame
+	check(editor.color_button.get_popup().visible and not editor.color_button.edit_alpha, "Clicking the swatch opens the opaque color palette")
+	editor.color_button.get_popup().hide()
+	for index in range(3):
+		editor.beat_select.select(index)
+		editor.beat_select.item_selected.emit(index)
+		var picker := editor.color_button.get_picker()
+		picker.color = chosen[index]
+		picker.color_changed.emit(picker.color)
+		check(editor.unsaved and editor.color_hex.text == "#" + picker.color.to_html(false).to_upper() and material.get_shader_parameter("hit_color") == chosen[index], "Each palette edit recolors the held note and its hex readout")
+	await create_timer(0.2).timeout
+	check(material.get_shader_parameter("flash") > 0.9 and editor.player_preview.hud.accent.is_equal_approx(chosen[2]), "The note stays lit while fine-tuning its color")
+	check(GuiLayout.read(layout_path).one_beat_color == defaults[2], "Unsaved palette edits remain in the preview")
+	editor.save_button.pressed.emit()
+	var saved := GuiLayout.read(layout_path)
+	for i in range(3):
+		check(saved.demo_color(editor.beat_select.get_item_id(i)).is_equal_approx(chosen[i]), "Each beat saves separately")
+	editor.screen_select.select(2)
+	editor.screen_select.item_selected.emit(2)
+	editor.size_spins.warning_gap_beats.value = 0.25
+	editor.size_spins.warning_flicker_beats.value = 0
+	editor.preview_bpm.value = 60
+	for i in GuiEditor.TRANSITIONS.size():
+		var direction: Vector2i = GuiEditor.TRANSITIONS[i]
+		editor.direction_select.select(i)
+		editor.direction_select.item_selected.emit(i)
+		editor.preview_play_button.pressed.emit()
+		check(editor.player_preview.transition_warning.visible and editor.player_preview.transition_warning.self_modulate.is_equal_approx(saved.demo_color(direction.y)), "Transition %s uses the edited destination color" % direction)
+		editor._process(minf(2.0, direction.x) - 0.125)
+		check(not editor.player_preview.transition_warning.visible and editor.player_preview.input_pad.emphasis, "Transition %s preserves the gap during play" % direction)
+		editor._process(1.5)
+		check(not editor.is_processing() and pad.emphasis and pad.accent.is_equal_approx(saved.demo_color(direction.y)), "Transition %s ends on the destination demo" % direction)
+	editor.reset_button.pressed.emit()
+	check(editor.layout.one_beat_color.is_equal_approx(chosen[2]), "Resetting transition settings preserves the palette")
+	editor.screen_select.select(0)
+	editor.screen_select.item_selected.emit(0)
+	editor.reset_button.pressed.emit()
+	check(pad.accent == defaults[2] and editor.layout.two_beat_color == defaults[1] and editor.layout.four_beat_color == defaults[0] and editor.unsaved, "Reset restores all three default colors in the game preview")

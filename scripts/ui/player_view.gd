@@ -15,6 +15,7 @@ var auto_mode := false
 var show_song_select := false
 var preview_mode := false
 var gui_layout_path := GuiLayout.PATH
+var gui_layout: GuiLayout
 var chart_path := ""
 var chart: Dictionary = {}
 var stream: AudioStream
@@ -30,8 +31,7 @@ var detailed_judgment := false
 var detailed_judgment_check := CheckBox.new()
 var timing_readout := TimingReadout.new()
 var transition_warning := TransitionWarning.new()
-var _warning_start_in_response := INF
-var _warning_duration_beats := 0.0
+var _next_demo_in_response := INF
 var _warning_accent := GameGrid.VIOLET
 var state := "ready"
 var offset_ms := 0.0
@@ -295,6 +295,7 @@ func _build_settings() -> void:
 
 
 func apply_gui_layout(layout: GuiLayout) -> void:
+	gui_layout = layout
 	demo_pad.size = Vector2.ONE * layout.demo_grid_size
 	demo_pad.position = Vector2(270, 368) - demo_pad.size * 0.5
 	input_pad.size = Vector2.ONE * layout.play_grid_size
@@ -303,6 +304,8 @@ func apply_gui_layout(layout: GuiLayout) -> void:
 	transition_warning.configure(layout, demo_pad.get_rect())
 	decor.grid_gap = Vector2(demo_pad.position.y + demo_pad.size.y, input_pad.position.y)
 	decor.queue_redraw()
+	if not preview_mode and not _visual_phase.is_empty():
+		_set_phase(_visual_phase, _visual_phrase, true)
 
 
 func _position_timing_readout() -> void:
@@ -485,24 +488,31 @@ func _on_music_finished() -> void:
 func _update_phase(time: float) -> void:
 	var phase := session.phase_at(time)
 	_set_phase(str(phase.kind), int(phase.index))
-	if is_finite(_warning_start_in_response):
-		transition_warning.show_at(float(phase.beat) - _warning_start_in_response, _warning_duration_beats, _warning_accent)
+	if is_finite(_next_demo_in_response):
+		# Intersect the warning window with this response, keeping the full gap before the demo.
+		var start := maxf(0.0, _next_demo_in_response - TransitionWarning.LEAD_BEATS)
+		var end := minf(float(session.chart.phrases[_visual_phrase].length_beats), _next_demo_in_response - transition_warning.gap_beats)
+		transition_warning.show_at(float(phase.beat) - start, end - start, _warning_accent)
 
 
-func _set_phase(kind: String, phrase_index: int = -1) -> void:
+func _set_phase(kind: String, phrase_index: int = -1, refresh: bool = false) -> void:
 	if phrase_index < 0 and kind in ["demo", "response"] and session != null:
 		phrase_index = int(session.phase_at(clock.seconds()).index)
-	if _visual_phase == kind and _visual_phrase == phrase_index:
+	if not refresh and _visual_phase == kind and _visual_phrase == phrase_index:
 		return
 	_visual_phase = kind
 	_visual_phrase = phrase_index
 	transition_warning.hide()
-	_warning_start_in_response = INF
+	_next_demo_in_response = INF
 	var phrases: Array = session.chart.phrases if session != null else []
 	if kind == "response" and phrase_index >= 0:
 		_prepare_warning(phrases, phrases[phrase_index])
-	var short_phrase := phrase_index >= 0 and phrase_index < phrases.size() and is_equal_approx(float(phrases[phrase_index].length_beats), 2.0)
-	var demo_accent := GameGrid.CORAL if short_phrase else GameGrid.VIOLET
+	var length := float(phrases[phrase_index].length_beats) if phrase_index >= 0 and phrase_index < phrases.size() else 4.0
+	apply_phase_colors(kind, length)
+
+
+func apply_phase_colors(kind: String, length: float) -> void:
+	var demo_accent := gui_layout.demo_color(length)
 	demo_pad.set_accent(demo_accent)
 	demo_pad.set_active(kind == "demo")
 	input_pad.set_active(kind == "response")
@@ -522,15 +532,14 @@ func _prepare_warning(phrases: Array, current: Dictionary) -> void:
 		if start >= response + length - 0.000001 and start < next_start:
 			next_start = start
 			next_length = float(phrase.length_beats)
-	var to_two := is_equal_approx(length, 4.0) and is_equal_approx(next_length, 2.0)
-	var to_four := is_equal_approx(length, 2.0) and is_equal_approx(next_length, 4.0)
-	if to_two or to_four:
-		var start := next_start - response - TransitionWarning.LEAD_BEATS
-		if start >= length:
-			return
-		_warning_start_in_response = start
-		_warning_duration_beats = minf(TransitionWarning.LEAD_BEATS, length - start)
-		_warning_accent = TransitionWarning.ORANGE if to_two else GameGrid.VIOLET
+	var current_beats := GuiLayout.palette_beats(length)
+	var upcoming := GuiLayout.palette_beats(next_length)
+	if current_beats != 0 and upcoming != 0 and current_beats != upcoming:
+		_next_demo_in_response = next_start - response
+		_warning_accent = gui_layout.demo_color(upcoming)
+		# Keep the original amber tube for the stock coral palette.
+		if upcoming == 2 and _warning_accent.is_equal_approx(GameGrid.CORAL):
+			_warning_accent = TransitionWarning.ORANGE
 
 
 func _press(cell: int, event: InputEvent = null) -> void:

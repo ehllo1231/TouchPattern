@@ -32,9 +32,7 @@ func configure(layout: GuiLayout, grid: Rect2) -> void:
 	gap_beats = layout.warning_gap_beats
 
 
-func show_at(elapsed_beats: float, available_beats: float, accent: Color) -> void:
-	# The gap is measured back from the next demo, including any chart rest.
-	var duration_beats := minf(available_beats, LEAD_BEATS - gap_beats)
+func show_at(elapsed_beats: float, duration_beats: float, accent: Color) -> void:
 	if elapsed_beats < 0.0 or elapsed_beats >= duration_beats:
 		hide()
 		return

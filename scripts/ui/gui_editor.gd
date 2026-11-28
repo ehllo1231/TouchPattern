@@ -2,6 +2,7 @@ class_name GuiEditor
 extends Control
 
 const PREVIEW_SIZES := [Vector2i(540, 960), Vector2i(390, 844), Vector2i(768, 1024), Vector2i(960, 540)]
+const TRANSITIONS := [Vector2i(4, 2), Vector2i(2, 4), Vector2i(4, 1), Vector2i(2, 1), Vector2i(1, 2), Vector2i(1, 4)]
 
 var layout_path := GuiLayout.PATH
 var layout: GuiLayout
@@ -12,6 +13,9 @@ var size_spins: Dictionary = {}
 var screen_select := OptionButton.new()
 var size_select := OptionButton.new()
 var phase_select := OptionButton.new()
+var beat_select := OptionButton.new()
+var color_button := ColorPickerButton.new()
+var color_hex := AppStyle.label("", 14)
 var game_settings := VBoxContainer.new()
 var transition_settings := VBoxContainer.new()
 var direction_select := OptionButton.new()
@@ -20,6 +24,7 @@ var preview_play_button: Button
 var preview_beat_label := AppStyle.label("", 13, AppStyle.MUTED)
 var preview_beat := 0.0
 var preview_start_beat := 0.0
+var preview_lead_beats := TransitionWarning.LEAD_BEATS
 var title_hint: Label
 var status := AppStyle.label("", 13, AppStyle.MUTED)
 var save_button: Button
@@ -33,6 +38,7 @@ var title_preview := FrontMenu.new()
 
 func _ready() -> void:
 	theme = AppStyle.make_theme()
+	theme.set_stylebox("panel", "PopupPanel", AppStyle.box(AppStyle.PANEL, 12, AppStyle.LINE))
 	layout = GuiLayout.read(layout_path)
 	_build_ui()
 	saved_values = _values()
@@ -94,7 +100,8 @@ func _build_ui() -> void:
 	inspector.add_child(HSeparator.new())
 	game_settings.add_theme_constant_override("separation", 24)
 	inspector.add_child(game_settings)
-	_add_control(game_settings, "demo_grid_size", "시범 그리드", GameGrid.VIOLET, GuiLayout.MIN_GRID_SIZE, GuiLayout.MAX_GRID_SIZE, 1, "px")
+	_build_palette()
+	_add_control(game_settings, "demo_grid_size", "시범 그리드", AppStyle.TEXT, GuiLayout.MIN_GRID_SIZE, GuiLayout.MAX_GRID_SIZE, 1, "px")
 	_add_control(game_settings, "play_grid_size", "플레이 그리드", GameGrid.TEAL, GuiLayout.MIN_GRID_SIZE, GuiLayout.MAX_GRID_SIZE, 1, "px")
 	game_settings.add_child(_hint("2×2 그리드의 한 변 길이를 조절합니다.\n중심 위치는 유지됩니다.\n\n기준 화면: 540 × 960\n기본 크기: 260 × 260"))
 	title_hint = _hint("시작 화면 미리보기")
@@ -115,8 +122,8 @@ func _build_ui() -> void:
 	phase_select.custom_minimum_size.y = 40
 	phase_select.item_selected.connect(_show_phase)
 	toolbar.add_child(phase_select)
-	direction_select.add_item("4박 → 2박")
-	direction_select.add_item("2박 → 4박")
+	for pair: Vector2i in TRANSITIONS:
+		direction_select.add_item("%d박 → %d박" % [pair.x, pair.y])
 	direction_select.custom_minimum_size.y = 40
 	direction_select.item_selected.connect(func(_index: int) -> void: _prepare_transition_preview())
 	toolbar.add_child(direction_select)
@@ -142,6 +149,43 @@ func _hint(text: String) -> Label:
 	var label := AppStyle.label(text, 13, AppStyle.MUTED)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
+
+
+func _build_palette() -> void:
+	var column := VBoxContainer.new()
+	game_settings.add_child(column)
+	column.add_child(AppStyle.label("시범 색상", 16))
+	var row := HBoxContainer.new()
+	column.add_child(row)
+	for beats: int in GuiLayout.BEAT_COLORS:
+		beat_select.add_item("%d박" % beats, beats)
+	beat_select.custom_minimum_size = Vector2(78, 40)
+	beat_select.item_selected.connect(func(_index: int) -> void: _show_palette())
+	row.add_child(beat_select)
+	color_button.edit_alpha = false
+	color_button.edit_intensity = false
+	color_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	color_button.custom_minimum_size = Vector2(52, 40)
+	color_button.tooltip_text = "팔레트 열기 · RGB, HSV 또는 HEX로 조정"
+	color_button.color_changed.connect(_change_color)
+	row.add_child(color_button)
+	color_hex.custom_minimum_size.x = 78
+	color_hex.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	row.add_child(color_hex)
+
+
+func _show_palette() -> void:
+	var color := layout.demo_color(beat_select.get_selected_id())
+	color_button.color = color
+	color_hex.text = "#" + color.to_html(false).to_upper()
+	_show_phase(phase_select.selected)
+
+
+func _change_color(color: Color) -> void:
+	layout.set(GuiLayout.BEAT_COLORS[beat_select.get_selected_id()], color)
+	color_hex.text = "#" + color.to_html(false).to_upper()
+	_show_phase(phase_select.selected)
+	_refresh_dirty()
 
 
 func _build_transition_settings() -> void:
@@ -242,16 +286,14 @@ func _show_screen(index: int) -> void:
 		player_preview.session = null
 		player_preview.transition_warning.hide()
 		player_preview.demo_pad.clear()
-		_show_phase(phase_select.selected)
+		_show_palette()
 
 
 func _show_phase(index: int) -> void:
-	player_preview.demo_pad.set_accent(GameGrid.VIOLET)
-	player_preview.demo_pad.set_active(index == 0)
-	player_preview.input_pad.set_active(index == 1)
-	var phase := "demo" if index == 0 else "response"
-	player_preview.hud.set_phase(phase)
-	player_preview.decor.set_phase(phase)
+	player_preview.demo_pad.clear()
+	player_preview.apply_phase_colors("demo" if index == 0 else "response", beat_select.get_selected_id())
+	if index == 0:
+		player_preview.demo_pad.hold_preview_note(1)
 
 
 func _prepare_transition_preview() -> void:
@@ -262,8 +304,7 @@ func _prepare_transition_preview() -> void:
 	player_preview.session = null
 	player_preview.transition_warning.hide()
 	player_preview.demo_pad.clear()
-	_show_phase(1)
-	player_preview.demo_pad.set_accent(GameGrid.VIOLET if direction_select.selected == 0 else GameGrid.CORAL)
+	player_preview.apply_phase_colors("response", TRANSITIONS[direction_select.selected].x)
 
 
 func _start_transition_preview() -> void:
@@ -274,8 +315,9 @@ func _start_transition_preview() -> void:
 			spin.apply()
 	if preview_bpm.get_line_edit().has_focus():
 		preview_bpm.apply()
-	var current := 4 if direction_select.selected == 0 else 2
-	var upcoming := 2 if current == 4 else 4
+	var direction: Vector2i = TRANSITIONS[direction_select.selected]
+	var current := direction.x
+	var upcoming := direction.y
 	var boundary := current * 2
 	var example := {"bpm": preview_bpm.value, "offset_seconds": 0.0, "phrases": [
 		{"show_beat": 0, "response_beat": current, "length_beats": current, "notes": []},
@@ -283,7 +325,8 @@ func _start_transition_preview() -> void:
 	]}
 	player_preview.session = RhythmSession.new(example)
 	player_preview._set_phase("wait")
-	preview_start_beat = boundary - TransitionWarning.LEAD_BEATS
+	preview_lead_beats = minf(current, TransitionWarning.LEAD_BEATS)
+	preview_start_beat = boundary - preview_lead_beats
 	preview_beat = 0.0
 	player_preview.demo_pad.clear()
 	preview_play_button.disabled = true
@@ -292,7 +335,7 @@ func _start_transition_preview() -> void:
 
 
 func _process(delta: float) -> void:
-	var end_beat := TransitionWarning.LEAD_BEATS + 1.0
+	var end_beat := preview_lead_beats + 1.0
 	preview_beat = minf(preview_beat + delta * preview_bpm.value / 60.0, end_beat)
 	_render_transition()
 	if preview_beat >= end_beat:
@@ -303,11 +346,13 @@ func _process(delta: float) -> void:
 
 func _render_transition() -> void:
 	var was_demo := player_preview.demo_pad.emphasis
-	var time := TouchChart.beat_to_seconds(player_preview.session.chart, preview_start_beat + preview_beat)
+	# Hold the last demo frame when the upcoming one-beat phrase ends here.
+	var display_beat := minf(preview_beat, preview_lead_beats + 1.0 - 0.000001)
+	var time := TouchChart.beat_to_seconds(player_preview.session.chart, preview_start_beat + display_beat)
 	player_preview._update_phase(time)
 	if player_preview.demo_pad.emphasis and not was_demo:
 		player_preview.demo_pad.flash(0)
-	var left := ceili(TransitionWarning.LEAD_BEATS - preview_beat)
+	var left := ceili(preview_lead_beats - preview_beat)
 	preview_beat_label.text = "플레이 · 다음 시범까지 %d박" % left if left > 0 else "다음 시범 시작"
 
 
@@ -328,6 +373,8 @@ func _sync_controls() -> void:
 func _values() -> Dictionary:
 	var values := {}
 	for key in size_spins:
+		values[key] = layout.get(key)
+	for key in GuiLayout.BEAT_COLORS.values():
 		values[key] = layout.get(key)
 	return values
 
@@ -360,6 +407,10 @@ func _reset() -> void:
 	for key: String in size_spins:
 		if key.begins_with("warning_") == transition_settings.visible:
 			layout.set(key, defaults.get(key))
+	if game_settings.visible:
+		for key in GuiLayout.BEAT_COLORS.values():
+			layout.set(key, defaults.get(key))
+		_show_palette()
 	_sync_controls()
 	player_preview.apply_gui_layout(layout)
 	_refresh_dirty()
